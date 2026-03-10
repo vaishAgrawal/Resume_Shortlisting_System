@@ -1,0 +1,172 @@
+import { useEffect } from "react";
+import AOS from "aos";
+import "aos/dist/aos.css";
+
+export default function Documentation() {
+  useEffect(() => {
+    AOS.init();
+    const year = document.getElementById("year");
+    if (year) year.textContent = new Date().getFullYear();
+  }, []);
+
+  return (
+    <div className="bg-brand-dark text-gray-900 font-sans selection:bg-brand-primary selection:text-white">
+
+      <div id="nav-placeholder"></div>
+
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 pt-24 flex flex-col lg:flex-row gap-8">
+
+        {/* SIDEBAR */}
+        <aside className="lg:w-1/4 hidden lg:block lg:sticky lg:top-28 h-fit">
+          <div className="bg-brand-card p-6 rounded-2xl border border-gray-200 transition-shadow duration-300 hover:shadow-xl">
+            <h3 className="text-gray-900 font-bold mb-4 uppercase text-sm tracking-wider">
+              Contents
+            </h3>
+
+            <ul className="space-y-3 text-sm text-gray-600">
+              <li>
+                <a href="#overview" className="hover:text-brand-primary transition block">
+                  System Overview
+                </a>
+              </li>
+
+              <li>
+                <a href="#architecture" className="hover:text-brand-primary transition block">
+                  Tech Stack
+                </a>
+              </li>
+
+              <li>
+                <a href="#workflow" className="hover:text-brand-primary transition block">
+                  System Flow
+                </a>
+              </li>
+
+              <li>
+                <a href="#scoring" className="hover:text-brand-primary transition block font-bold text-gray-900">
+                  Scoring Algorithm
+                </a>
+              </li>
+
+              <li className="pl-4 border-l border-gray-200">
+                <a href="#format" className="hover:text-brand-primary transition block">
+                  1. Format (15pts)
+                </a>
+              </li>
+
+              <li className="pl-4 border-l border-gray-200">
+                <a href="#skills" className="hover:text-brand-primary transition block">
+                  2. Skills (15pts)
+                </a>
+              </li>
+
+              <li className="pl-4 border-l border-gray-200">
+                <a href="#experience" className="hover:text-brand-primary transition block">
+                  3. Experience (20pts)
+                </a>
+              </li>
+
+              <li>
+                <a href="#export" className="hover:text-brand-primary transition block">
+                  Export Options
+                </a>
+              </li>
+            </ul>
+          </div>
+        </aside>
+
+        {/* CONTENT */}
+        <main className="lg:w-3/4 lg:ml-auto pb-24">
+
+          <section id="overview" className="mb-16" data-aos="fade-up">
+            <h1 className="text-4xl font-bold mb-6">
+              System <span className="text-gradient">Documentation</span>
+            </h1>
+
+            <p className="text-gray-600 mb-4 leading-relaxed">
+              The AI-Powered Resume Shortlisting System is designed to automatically read,
+              analyze, and rank resumes according to a company's specific job requirements.
+              It extracts details from resumes (PDF/DOCX) and compares them against job
+              descriptions to produce a ranked shortlist.
+            </p>
+
+            <div className="bg-brand-card p-6 rounded-xl border-l-4 border-brand-primary transition-shadow duration-300 hover:shadow-lg">
+              <h4 className="text-gray-900 font-bold mb-2">Primary Goal</h4>
+              <p className="text-sm text-gray-600">
+                To save recruiters time, increase accuracy, and make data-driven hiring
+                decisions by removing manual bias.
+              </p>
+            </div>
+          </section>
+          <section id="architecture" className="mb-16" data-aos="fade-up">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+              Technical Architecture
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-brand-card p-6 rounded-2xl border border-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <h3 className="text-brand-primary font-bold mb-4">
+                  <i className="fab fa-java mr-2"></i>Backend (Java)
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li><strong>Framework:</strong> Spring Boot</li>
+                  <li><strong>Database:</strong> MySQL or PostgreSQL</li>
+                  <li><strong>PDF Parsing:</strong> Apache PDFBox</li>
+                  <li><strong>NLP:</strong> Apache OpenNLP</li>
+                  <li><strong>Auth:</strong> JWT with Spring Security</li>
+                </ul>
+              </div>
+              <div className="bg-brand-card p-6 rounded-2xl border border-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <h3 className="text-brand-primary font-bold mb-4">
+                  <i className="fab fa-js mr-2"></i>Frontend
+                </h3>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li><strong>Core:</strong> React</li>
+                  <li><strong>Styling:</strong> Tailwind CSS</li>
+                  <li><strong>Hosting:</strong> Vercel / Netlify</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section id="workflow" className="mb-16" data-aos="fade-up">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">
+              System Flow
+            </h2>
+            <div className="relative">
+              <div className="absolute left-4 top-0 h-full w-0.5 bg-brand-primary/30"></div>
+              <div className="space-y-8 pl-12">
+                <div className="relative">
+                  <div className="absolute -left-[42px] bg-brand-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">1</div>
+                  <h4 className="text-gray-900 font-bold">Job Creation</h4>
+                  <p className="text-sm text-gray-600">
+                    Recruiter creates a job posting with specific requirements.
+                  </p>
+                </div>
+                <div className="relative">
+                  <div className="absolute -left-[42px] bg-brand-card border border-brand-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-brand-primary">2</div>
+                  <h4 className="text-gray-900 font-bold">Resume Upload</h4>
+                  <p className="text-sm text-gray-600">
+                    Resumes are uploaded in bulk (PDF/DOCX).
+                  </p>
+                </div>
+                <div className="relative">
+                  <div className="absolute -left-[42px] bg-brand-card border border-brand-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-brand-primary">3</div>
+                  <h4 className="text-gray-900 font-bold">Analysis & Scoring</h4>
+                  <p className="text-sm text-gray-600">
+                    Backend extracts text and runs the matching algorithm.
+                  </p>
+                </div>
+                <div className="relative">
+                  <div className="absolute -left-[42px] bg-brand-card border border-brand-primary w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-brand-primary">4</div>
+                  <h4 className="text-gray-900 font-bold">Dashboard Ranking</h4>
+                  <p className="text-sm text-gray-600">
+                    Candidates are displayed on the dashboard ranked by score.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}
