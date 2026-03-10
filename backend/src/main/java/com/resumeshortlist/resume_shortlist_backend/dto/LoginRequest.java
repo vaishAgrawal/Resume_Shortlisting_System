@@ -1,0 +1,13 @@
+package com.resumeshortlist.resume_shortlist_backend.dto;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class LoginRequest {
+    private String email;
+    private String password;
+}

@@ -1,0 +1,106 @@
+package com.resumeshortlist.resume_shortlist_backend.controller;
+
+import com.resumeshortlist.resume_shortlist_backend.entity.Resume;
+import com.resumeshortlist.resume_shortlist_backend.service.FileUploadService;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import com.resumeshortlist.resume_shortlist_backend.service.ResumeParsingService;
+
+
+@RestController
+@RequestMapping("/api/resumes")
+@RequiredArgsConstructor
+public class ResumeController {
+
+    private final FileUploadService FileUploadService;
+    @Autowired
+    private ResumeParsingService resumeParsingService;
+    // 🎯 API #7 Upload Multiple Resumes
+    @PostMapping("/upload/{userId}")
+    public ResponseEntity<?> uploadResumes(
+            @PathVariable Long userId,
+            @RequestPart("files") MultipartFile[] files) {
+        try {
+            // Only saves the file to disk and DB. Does NOT trigger Gemini yet.
+            List<Resume> saved = FileUploadService.uploadMultipleResumes(userId, files);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Upload failed: " + e.getMessage());
+        }
+    }
+
+    // 🎯 API #8 Get All Resumes Uploaded by Specific User
+    @GetMapping("/user/{userId}")
+public ResponseEntity<List<Resume>> getResumesByUser(@PathVariable Long userId) {
+    System.out.println("API HIT: getResumesByUser for UserID: " + userId);
+    
+    List<Resume> resumes = FileUploadService.getAllResumesByUser(userId);
+    
+    System.out.println("API RESULT: Found " + resumes.size() + " resumes.");
+    return ResponseEntity.ok(resumes);
+}
+
+    @PostMapping("/analyze/all/{userId}")
+    public ResponseEntity<?> analyzeAllResumes(@PathVariable Long userId) {
+        System.out.println("Starting Async Extraction...");
+        try {
+            List<Resume> userResumes = FileUploadService.getAllResumesByUser(userId);
+
+            // 1. Kick off all processing at the exact same time!
+            List<CompletableFuture<String>> futures = userResumes.stream()
+                    .map(resume -> {
+                        try {
+                            return resumeParsingService.parseAndSaveResume(resume.getId());
+                        } catch (Exception e) {
+                            return CompletableFuture.completedFuture("Failed");
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            // 2. Wait for all threads to finish
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            // 3. Count results
+            int processedCount = 0;
+            int skippedCount = 0;
+            for (CompletableFuture<String> future : futures) {
+                if ("Success".equals(future.get()))
+                    processedCount++;
+                else
+                    skippedCount++;
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Analysis Complete");
+            response.put("processed", processedCount);
+            response.put("skipped", skippedCount);
+            response.put("total", userResumes.size());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Batch Analysis failed: " + e.getMessage());
+        }
+    }
+
+  @PostMapping("/parse/{resumeId}")
+    public ResponseEntity<?> parseResume(@PathVariable Long resumeId) {
+        try {
+            resumeParsingService.parseAndSaveResume(resumeId);
+            return ResponseEntity.ok("Resume parsed and data extracted successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Parsing failed: " + e.getMessage());
+        }
+    }
+}
