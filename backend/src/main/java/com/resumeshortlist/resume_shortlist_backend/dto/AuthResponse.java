@@ -9,16 +9,5 @@ public class AuthResponse {
     private String token;
     private Long userId;   
     private String name;
-
-    public AuthResponse(String token) {
-        this.token = token;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
+    private String role;
 }

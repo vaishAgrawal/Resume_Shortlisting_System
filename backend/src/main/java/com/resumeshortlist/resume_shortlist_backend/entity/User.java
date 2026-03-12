@@ -12,8 +12,9 @@ import java.time.LocalDateTime;
 public class User {
 
     public enum Role {
-        ADMIN,
-        RECRUITER
+        USER,      // Candidate
+        RECRUITER,
+        ADMIN
     }
 
     @Id
@@ -31,8 +32,21 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.RECRUITER;
+    private Role role;
+
+    // --- Candidate Specific Fields ---
+    private String username;
+    private String phoneNumber;
+    private String location;
+    private String collegeName;
+    private String degree;
+    private Integer graduationYear;
 
     @Column(updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }
