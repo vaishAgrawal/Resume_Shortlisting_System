@@ -44,7 +44,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Public APIs
-                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/test").permitAll()
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/send-otp", "/api/auth/verify-otp").permitAll()
                 
                 // Specific Role Protection Examples (V2 Logic)
                 // Recruiters can manage job postings; Candidates (USER) can view them

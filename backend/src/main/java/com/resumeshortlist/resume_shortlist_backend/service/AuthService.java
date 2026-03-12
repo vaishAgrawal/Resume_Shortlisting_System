@@ -61,7 +61,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Error: User not found!"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Error: Invalid credentials!");
+        throw new RuntimeException("Invalid credentials");
         }
 
         // Optimized: We include the role in the UserDetails

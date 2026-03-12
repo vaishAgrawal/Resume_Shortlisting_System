@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import api from "../api/axios";
 
 export default function Signup() {
 
@@ -16,12 +17,43 @@ export default function Signup() {
   const [degree, setDegree] = useState("");
   const [gradYear, setGradYear] = useState("");
   const [username, setUsername] = useState("");
+  const [secretKey, setSecretKey] = useState("");
 
   const matchState = useMemo(() => {
     if (!password && !confirm) return "idle";
     if (!password || !confirm) return "idle";
     return password === confirm ? "match" : "mismatch";
   }, [password, confirm]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (password !== confirm) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    const payload = {
+      name: fullName,
+      email,
+      password,
+      role: role.toUpperCase(),
+      username: role === "user" ? username : null,
+      phoneNumber: phone,
+      location,
+      collegeName: college,
+      degree,
+      graduationYear: parseInt(gradYear),
+      recruiterSecretKey: role === "recruiter" ? secretKey : null
+    };
+
+    try {
+      const response = await api.post("/auth/register", payload);
+      alert(response.data); // "User registered successfully!"
+      window.location.href = "/login";
+    } catch (err) {
+      alert(err.response?.data || "Registration failed");
+    }
+  };
 
   return (
 
@@ -94,32 +126,7 @@ export default function Signup() {
 
           <form
             className="space-y-5"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (password !== confirm) {
-                alert("Passwords do not match.");
-                return;
-              }
-              const nameParts = fullName.trim().split(" ");
-              const firstName = nameParts[0] || "";
-              const lastName = nameParts.slice(1).join(" ") || "";
-              const profileData = {
-                firstName,
-                lastName,
-                fullName,
-                email,
-                phone,
-                location,
-                college,
-                degree,
-                gradYear,
-                role: role === "recruiter" ? "Recruiter" : "User"
-              };
-              localStorage.setItem("profileData", JSON.stringify(profileData));
-              localStorage.setItem("role", role);
-              alert("Registration successful! Please login.");
-              window.location.href = "/login";
-            }}
+            onSubmit={handleSubmit}
           >
 
             {/* ROLE */}
@@ -336,7 +343,7 @@ export default function Signup() {
                 </label>
 
                 <input
-                  type="password"
+                  type="password" value={secretKey} onChange={(e) => setSecretKey(e.target.value)}
                   placeholder="Enter secret key"
                   className="w-full mt-1 border border-gray-200 rounded-lg px-4 py-3 text-gray-800"
                 />

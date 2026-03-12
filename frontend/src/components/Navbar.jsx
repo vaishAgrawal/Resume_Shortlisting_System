@@ -65,13 +65,11 @@ export default function Navbar() {
   }, [profileOpen]);
 
   const handleLogout = () => {
-    localStorage.removeItem("jwtToken");
-    localStorage.removeItem("role");
-    localStorage.removeItem("userId");
+    localStorage.clear(); // Clears token, role, and userId at once
     setIsAuthed(false);
-    setProfileOpen(false);
-    window.location.href = "/login";
+    window.location.href = "/"; // Redirect to home
   };
+  
   const handleRecruiterClick = () => {
     const token = localStorage.getItem("jwtToken");
     if (token) {
