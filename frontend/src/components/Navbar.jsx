@@ -5,11 +5,38 @@ const HR_SECRET_KEY = "SECRET123";
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
+  const [profile, setProfile] = useState({ initials: "U", imageUrl: "" });
+  const [profileOpen, setProfileOpen] = useState(false);
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
+  const profileRef = useRef(null);
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
-    setIsAuthed(Boolean(token));
+    const role = localStorage.getItem("role");
+    const userId = localStorage.getItem("userId");
+    setIsAuthed(Boolean(token || role || userId));
+
+    const storedProfile = localStorage.getItem("profileData");
+    if (storedProfile) {
+      try {
+        const parsed = JSON.parse(storedProfile);
+        const name = (parsed.fullName || "").trim();
+        const initials = name
+          ? name
+              .split(" ")
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((part) => part[0].toUpperCase())
+              .join("")
+          : "U";
+        setProfile({
+          initials,
+          imageUrl: parsed.imageUrl || ""
+        });
+      } catch {
+        setProfile({ initials: "U", imageUrl: "" });
+      }
+    }
   }, []);
   useEffect(() => {
     if (!mobileOpen) return;
@@ -24,6 +51,27 @@ export default function Navbar() {
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
   }, [mobileOpen]);
+  useEffect(() => {
+    if (!profileOpen) return;
+    const onClick = (event) => {
+      const menu = profileRef.current;
+      if (!menu) return;
+      if (!menu.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [profileOpen]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("jwtToken");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId");
+    setIsAuthed(false);
+    setProfileOpen(false);
+    window.location.href = "/login";
+  };
   const handleRecruiterClick = () => {
     const token = localStorage.getItem("jwtToken");
     if (token) {
@@ -88,15 +136,47 @@ export default function Navbar() {
                   </a>
                 </div>
               ) : (
-                <div>
-                  
-                  <a
-                    href="/user-dashboard"
-                    className="px-6 py-2.5 rounded-full bg-brand-primary text-white font-semibold shadow-lg shadow-brand-primary/30 hover:shadow-brand-primary/50 hover:bg-brand-primary transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 active:scale-95 flex items-center gap-2"
+                <div className="relative" ref={profileRef}>
+                  <button
+                    type="button"
+                    onClick={() => setProfileOpen((v) => !v)}
+                    className="flex items-center group"
+                    aria-haspopup="menu"
+                    aria-expanded={profileOpen}
+                    aria-label="Account menu"
                   >
-                    
-                    <i className="fas fa-user-circle"></i> My Account
-                  </a>
+                    {profile.imageUrl ? (
+                      <img
+                        src={profile.imageUrl}
+                        alt="Profile"
+                        className="h-10 w-10 rounded-full object-cover border border-brand-primary/30 shadow-sm"
+                      />
+                    ) : (
+                      <span className="h-10 w-10 rounded-full bg-gradient-to-br from-[#7c5ce5] to-[#a78bfa] text-white flex items-center justify-center shadow-sm">
+                        <i className="fas fa-user text-sm"></i>
+                      </span>
+                    )}
+                  </button>
+
+                  {profileOpen ? (
+                    <div className="absolute right-0 mt-3 w-48 rounded-2xl border border-gray-200 bg-white shadow-xl p-2">
+                      <a
+                        href="/profile"
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <i className="fas fa-user"></i>
+                        View Profile
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <i className="fas fa-sign-out-alt"></i>
+                        Logout
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -168,13 +248,22 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="w-full">
-              
               <a
-                href="/user-dashboard"
-                className="px-6 py-2.5 rounded-full bg-brand-primary text-white font-semibold shadow-lg flex items-center justify-center gap-2 hover:bg-brand-primary transition-all duration-300 w-full"
+                href="/profile"
+                className="flex items-center justify-center gap-3 rounded-full bg-brand-primary text-white font-semibold shadow-lg hover:bg-brand-primary transition-all duration-300 w-full py-2.5"
               >
-                
-                <i className="fas fa-user-circle"></i> My Account
+                {profile.imageUrl ? (
+                  <img
+                    src={profile.imageUrl}
+                    alt="Profile"
+                    className="h-8 w-8 rounded-full object-cover border border-white/40"
+                  />
+                ) : (
+                  <span className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-semibold">
+                    {profile.initials}
+                  </span>
+                )}
+                My Profile
               </a>
             </div>
           )}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import AOS from "aos";
 import Navbar from "./components/Navbar.jsx";
@@ -7,18 +7,20 @@ import ScrollTopButton from "./components/ScrollTopButton.jsx";
 import Home from "./pages/Home.jsx";
 import Recruiter from "./pages/Recruiter.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import UserDashboard from "./pages/UserDashboard.jsx";
+import UserDashboard from "./pages/User.jsx";
 import Documentation from "./pages/Documentation.jsx";
 import Support from "./pages/Support.jsx";
 import Privacy from "./pages/Privacy.jsx";
 import Signup from "./pages/Signup.jsx";
 import Login from "./pages/Login.jsx";
-import { AdminPage, ProfilePage } from "./pages/Pages.jsx";
+import ProfilePage from "./pages/proflie.jsx";
 export default function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const location = useLocation();
   const hideChrome =
-    location.pathname === "/login" || location.pathname === "/signup";
+    location.pathname === "/login" ||
+    location.pathname === "/signup" ||
+    location.pathname === "/profile";
   useEffect(() => {
     AOS.init({ once: true });
   }, []);
@@ -33,7 +35,6 @@ export default function App() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const yearText = useMemo(() => new Date().getFullYear(), []);
   return (
     <div className="bg-brand-dark text-gray-200 font-sans overflow-x-hidden selection:bg-brand-primary selection:text-gray-900">
       
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/recruiter" element={<Recruiter />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/recruiter-dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/user-dashboard" element={<UserDashboard />} />
           <Route path="/documentation" element={<Documentation />} />
@@ -54,7 +56,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
         </Routes>
       </main>
-      {!hideChrome && <Footer yearText={yearText} />}
+      {!hideChrome && <Footer />}
       {!hideChrome && (
         <ScrollTopButton visible={showScrollTop} onClick={scrollToTop} />
       )}

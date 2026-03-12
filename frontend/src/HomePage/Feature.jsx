@@ -8,13 +8,13 @@ export default function Feature() {
       <div className="absolute -bottom-16 -right-10 w-72 h-72 bg-[#a5b4fc]/35 rounded-full blur-[120px]"></div>
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <div className="text-center mb-16" data-aos="fade-up">
-          <span className="text-[#8b5cf6] font-bold tracking-wider uppercase text-sm">
+          <span className="text-[#8b5cf6] font-bold tracking-wider uppercase text-sm font-body">
             Capabilities
           </span>
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-4">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mt-2 mb-4 font-display">
             Powerful Features
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 max-w-2xl mx-auto font-body">
             Tools designed to make your hiring life easier, faster, and smarter.
           </p>
         </div>
@@ -66,10 +66,10 @@ export default function Feature() {
               <div className={`w-14 h-14 ${item.tone} rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110`}>
                 <i className={`fas ${item.icon} text-2xl`}></i>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-[#6d28d9] transition-colors">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-[#6d28d9] transition-colors font-display">
                 {item.title}
               </h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-gray-600 text-sm leading-relaxed font-body">
                 {item.desc}
               </p>
             </div>

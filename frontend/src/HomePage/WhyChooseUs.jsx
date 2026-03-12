@@ -8,11 +8,11 @@ export default function WhyChooseUs() {
       <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-[#a5b4fc]/35 rounded-full blur-[120px]"></div>
       <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
         <div className="mb-20" data-aos="fade-up">
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-4xl md:text-5xl lg:text-5xl font-bold text-gray-900 mb-4 font-display">
             Why Choose Us?
           </h2>
           <div className="w-24 h-1 bg-[#8b5cf6] mx-auto rounded-full mb-6"></div>
-          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+          <p className="text-gray-600 max-w-2xl mx-auto text-lg font-body">
             Revolutionizing the recruitment process with cutting-edge AI
             technology.
           </p>
@@ -26,10 +26,10 @@ export default function WhyChooseUs() {
             <div className="w-20 h-20 mx-auto bg-[#ede9fe] border border-[#ddd6fe] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#8b5cf6] group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
               <i className="fas fa-bullseye text-3xl text-[#8b5cf6] group-hover:text-white transition-colors"></i>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-[#6d28d9] transition-colors">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-[#6d28d9] transition-colors font-display">
               Our Mission
             </h3>
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-gray-600 leading-relaxed font-body">
               To provide innovative AI solutions that transform the recruitment
               process and help companies find the best talent.
             </p>
@@ -42,10 +42,10 @@ export default function WhyChooseUs() {
             <div className="w-20 h-20 mx-auto bg-[#ede9fe] border border-[#ddd6fe] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#8b5cf6] group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
               <i className="fas fa-eye text-3xl text-[#8b5cf6] group-hover:text-white transition-colors"></i>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-[#6d28d9] transition-colors">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-[#6d28d9] transition-colors font-display">
               Our Vision
             </h3>
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-gray-600 leading-relaxed font-body">
               To become the global leader in AI-powered recruitment solutions,
               making hiring faster, fairer, and more effective.
             </p>
@@ -58,10 +58,10 @@ export default function WhyChooseUs() {
             <div className="w-20 h-20 mx-auto bg-[#ede9fe] border border-[#ddd6fe] rounded-2xl flex items-center justify-center mb-6 group-hover:bg-[#8b5cf6] group-hover:text-white group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
               <i className="fas fa-chart-line text-3xl text-[#8b5cf6] group-hover:text-white transition-colors"></i>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-[#6d28d9] transition-colors">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 group-hover:text-[#6d28d9] transition-colors font-display">
               Our Approach
             </h3>
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-gray-600 leading-relaxed font-body">
               We combine cutting-edge AI technology with deep industry expertise
               to deliver exceptional recruitment solutions.
             </p>
