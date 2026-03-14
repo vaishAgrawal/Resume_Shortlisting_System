@@ -38,7 +38,7 @@ body {
   height: 2px;
   bottom: -2px;
   left: 0;
-  background-color: #1d4ed8;
+  background-color: #8b5cf6;
   transform-origin: bottom right;
   transition: transform 0.25s ease-out;
 }

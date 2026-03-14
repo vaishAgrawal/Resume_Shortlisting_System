@@ -8,7 +8,7 @@ export default function Process() {
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 font-display">
             How It Works
           </h2>
-          <p className="text-gray-600 mt-3 font-body">
+          <p className="text-gray-600 mt-3 text-lg font-body">
             Get from resumes to shortlisted candidates in 5 simple steps
           </p>
         </div>
