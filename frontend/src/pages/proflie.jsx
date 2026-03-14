@@ -1,14 +1,32 @@
 import { useEffect, useState } from "react";
 import { FaEye, FaEyeSlash, FaCamera } from "react-icons/fa";
-import { Toaster, toast } from 'react-hot-toast';
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiBookOpen,
+  FiAward,
+  FiCalendar
+} from "react-icons/fi";
+import { Toaster, toast } from "react-hot-toast";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("info");
   const [showPassword, setShowPassword] = useState({ current: false, new: false, confirm: false });
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
+  const [isEditing, setIsEditing] = useState(false);
+
   const [profile, setProfile] = useState({
-    firstName: "", lastName: "", email: "", phone: "", 
-    college: "", degree: "", passingYear: "", location: "", imageUrl: ""
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    college: "",
+    degree: "",
+    passingYear: "",
+    location: "",
+    imageUrl: ""
   });
 
   useEffect(() => {
@@ -19,118 +37,311 @@ export default function ProfilePage() {
   const handleSave = () => {
     localStorage.setItem("profileData", JSON.stringify(profile));
     toast.success("Profile Updated Successfully!");
+    setIsEditing(false);
   };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => setProfile(prev => ({ ...prev, imageUrl: reader.result }));
+      reader.onload = () =>
+        setProfile((prev) => ({ ...prev, imageUrl: reader.result }));
       reader.readAsDataURL(file);
     }
   };
 
-  const toggleVisibility = (field) => setShowPassword(prev => ({ ...prev, [field]: !prev[field] }));
+  const toggleVisibility = (field) =>
+    setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
 
   return (
-    <main className="min-h-screen bg-[#f5f3ff] p-6 md:p-10 font-sans">
+    <main className="h-screen overflow-hidden bg-[#f5f3ff] p-6 md:p-10 font-sans">
       <Toaster position="top-right" />
-      
-      <div className="max-w-5xl mx-auto bg-white rounded-[40px] p-8 shadow-sm border border-indigo-100">
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-12 items-start">
-          
-          <aside className="space-y-6 self-start">
-            <div className="flex flex-col items-center">
-              <div className="relative w-32 h-32 rounded-full bg-[#ede9fe] flex items-center justify-center overflow-hidden mb-2 border-4 border-white shadow-md">
-                {profile.imageUrl ? <img src={profile.imageUrl} className="w-full h-full object-cover" alt="Profile" /> : <span className="text-indigo-300">No Img</span>}
+
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 h-full">
+
+        {/* SIDEBAR */}
+        <aside className="bg-white rounded-2xl border border-indigo-100 shadow-sm p-6 flex flex-col sticky top-6">
+
+          {/* DASHBOARD HEADER */}
+          <div className="rounded-xl bg-gradient-to-r from-[#ede9fe] to-[#f5f3ff] px-5 py-5 border border-indigo-100 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-1.5 rounded-full bg-[#6d28d9]"></div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-black text-indigo-800 tracking-wide">
+                    Dashboard
+                  </h2>
+                </div>
+                <p className="text-xs text-indigo-500 mt-1">
+                  Account overview
+                </p>
               </div>
-              
-              <label className="flex items-center gap-2 bg-[#8b5cf6] px-4 py-2 rounded-full cursor-pointer text-white text-sm font-semibold hover:bg-[#7c3aed] transition shadow-sm">
-                <FaCamera size={14} />
-                Change Photo
-                <input type="file" className="hidden" onChange={handleAvatarChange} />
-              </label>
-
-              <h2 className="text-xl font-bold text-indigo-950 mt-4 font-display">
-                {profile.firstName || "User"}
-              </h2>
             </div>
-            
-            <nav className="space-y-2">
-              {["info", "security"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`w-full p-4 rounded-2xl font-medium transition cursor-pointer ${
-                    activeTab === tab
-                      ? "bg-[#ede9fe] text-[#6d28d9]"
-                      : "text-gray-400 hover:bg-gray-50"
-                  }`}
-                >
-                  {tab === "info" ? "Personal Information" : "Login & Password"}
-                </button>
-              ))}
-              <button
-                onClick={() => { localStorage.clear(); window.location.href = "/login"; }}
-                className="w-full text-red-400 p-4 rounded-2xl font-medium hover:bg-red-50 cursor-pointer"
-              >
-                Log Out
-              </button>
-            </nav>
-          </aside>
+          </div>
+          <br />
+          <hr />
 
-          <section className="self-start">
+          {/* MENU */}
+          <div className="space-y-4 mt-6">
+            {["info", "security"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`w-full text-left px-5 py-3 rounded-2xl text-sm font-semibold transition ${
+                  activeTab === tab
+                    ? "bg-[#ede9fe] text-[#6d28d9]"
+                    : "bg-white text-slate-500 hover:bg-slate-50"
+                }`}
+              >
+                {tab === "info"
+                  ? "Personal Information"
+                  : "Login & Password"}
+              </button>
+            ))}
+
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = "/login";
+              }}
+              className="w-full text-left px-5 py-3 rounded-2xl text-sm font-semibold text-red-500 bg-white hover:bg-red-50 transition"
+            >
+              Log Out
+            </button>
+          </div>
+
+          {/* LOGO BOTTOM */}
+          <div className="mt-auto pt-6 border-t border-indigo-50 flex justify-center">
+            <img
+              src="/images/graphuralogo.webp"
+              alt="Graphura logo"
+              className="w-full h-auto object-contain opacity-80"
+            />
+          </div>
+        </aside>
+
+        {/* RIGHT SIDE CONTENT */}
+        <div className="space-y-8 overflow-y-auto pr-2">
+
+          {/* PROFILE HEADER */}
+          <div className="bg-white rounded-[32px] border border-indigo-100 shadow-sm overflow-hidden">
+            <div className="h-28 bg-gradient-to-r from-[#c7d2fe] via-[#ddd6fe] to-[#c4b5fd]"></div>
+
+            <div className="px-8 pb-8 -mt-14 flex flex-col gap-6">
+
+              <div className="flex flex-col items-start">
+
+                <div className="relative w-40 h-40 rounded-full bg-white border-4 border-white shadow-md overflow-hidden">
+                  {profile.imageUrl ? (
+                    <img
+                      src={profile.imageUrl}
+                      className="w-full h-full object-cover"
+                      alt="Profile"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-[#ede9fe] flex items-center justify-center text-indigo-300 font-semibold">
+                      No Img
+                    </div>
+                  )}
+                  
+                </div>
+
+                {/* CHANGE PHOTO BUTTON */}
+                <label className="mt-4 flex items-center gap-2 bg-[#8b5cf6] px-4 py-2 rounded-full cursor-pointer text-white text-sm font-semibold hover:bg-[#7c3aed] transition shadow-sm">
+                  <FaCamera size={14} />
+                  Change Photo
+                  <input type="file" className="hidden" onChange={handleAvatarChange} />
+                </label>
+
+                <h2 className="text-2xl font-bold text-indigo-950 mt-4">
+                  {profile.firstName || "User"} {profile.lastName}
+                </h2>
+
+              </div>
+            </div>
+          </div>
+
+          {/* DETAILS */}
+          <section className="bg-white rounded-[28px] border border-indigo-100 shadow-sm p-8">
+
             {activeTab === "info" ? (
               <>
-                <h2 className="text-3xl font-bold text-[#6d28d9] mb-8 tracking-tight font-sans border-l-4 border-[#8b5cf6] pl-4">
-                  Personal Information
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Name Fields */}
-                  <div>
-                    <label className="text-xs font-semibold text-indigo-400 uppercase tracking-wider ml-1">First Name</label>
-                    <input placeholder=" First Name" value={profile.firstName} onChange={e => setProfile({...profile, firstName: e.target.value})} className="w-full bg-[#fafaff] border border-indigo-50 p-4 rounded-2xl mt-1 text-indigo-900 focus:ring-2 focus:ring-[#8b5cf6] outline-none"/>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-indigo-400 uppercase tracking-wider ml-1">Last Name</label>
-                    <input placeholder=" Last Name" value={profile.lastName} onChange={e => setProfile({...profile, lastName: e.target.value})} className="w-full bg-[#fafaff] border border-indigo-50 p-4 rounded-2xl mt-1 text-indigo-900 focus:ring-2 focus:ring-[#8b5cf6] outline-none"/>
-                  </div>
-                  {/* Email Field */}
-                  <div className="md:col-span-2">
-                    <label className="text-xs font-semibold text-indigo-400 uppercase tracking-wider ml-1">Email</label>
-                    <input disabled value={profile.email} className="w-full bg-gray-50 border border-indigo-50 p-4 rounded-2xl mt-1 text-gray-500 cursor-not-allowed"/>
-                  </div>
-                  {/* Remaining Fields */}
-                  {['phone', 'college', 'degree', 'passingYear'].map((key) => (
-                    <div key={key}>
-                      <label className="text-xs font-semibold text-indigo-400 uppercase tracking-wider ml-1">{key.replace(/([A-Z])/g, ' $1')}</label>
-                      <input placeholder={` ${key.replace(/([A-Z])/g, ' $1')}`} value={profile[key]} onChange={e => setProfile({...profile, [key]: e.target.value})} className="w-full bg-[#fafaff] border border-indigo-50 p-4 rounded-2xl mt-1 text-indigo-900 focus:ring-2 focus:ring-[#8b5cf6] outline-none"/>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-indigo-950">
+                    Profile Details
+                  </h2>
+
+                  {!isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition"
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
-                <button onClick={handleSave} className="mt-10 w-full py-4 bg-[#8b5cf6] text-white rounded-2xl font-bold hover:bg-[#7c3aed] transition cursor-pointer">
-                  Save Changes
-                </button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                  {/* FIRST NAME */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                      First Name
+                    </p>
+
+                    <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+                      <FiUser className="text-indigo-300" />
+
+                      <input
+                        placeholder={isEditing ? "First Name" : ""}
+                        value={profile.firstName}
+                        onChange={(e) =>
+                          setProfile({ ...profile, firstName: e.target.value })
+                        }
+                        readOnly={!isEditing}
+                        className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* LAST NAME */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                      Last Name
+                    </p>
+
+                    <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+                      <FiUser className="text-indigo-300" />
+
+                      <input
+                        placeholder={isEditing ? "Last Name" : ""}
+                        value={profile.lastName}
+                        onChange={(e) =>
+                          setProfile({ ...profile, lastName: e.target.value })
+                        }
+                        readOnly={!isEditing}
+                        className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* EMAIL */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                      Email
+                    </p>
+
+                    <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+                      <FiMail className="text-indigo-300" />
+
+                      <input
+                        disabled
+                        value={profile.email}
+                        className="w-full bg-transparent px-0 py-1 text-gray-500 cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  {["phone", "college", "degree", "passingYear", "location"].map(
+                    (key) => (
+                      <div key={key} className="space-y-2">
+                        <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                          {key.replace(/([A-Z])/g, " $1")}
+                        </p>
+
+                        <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+
+                          {key === "phone" && <FiPhone className="text-indigo-300" />}
+                          {key === "college" && <FiBookOpen className="text-indigo-300" />}
+                          {key === "degree" && <FiAward className="text-indigo-300" />}
+                          {key === "passingYear" && <FiCalendar className="text-indigo-300" />}
+                          {key === "location" && <FiMapPin className="text-indigo-300" />}
+
+                          <input
+                            placeholder={
+                              isEditing
+                                ? key.replace(/([A-Z])/g, " $1")
+                                : ""
+                            }
+                            value={profile[key]}
+                            onChange={(e) =>
+                              setProfile({
+                                ...profile,
+                                [key]: e.target.value
+                              })
+                            }
+                            readOnly={!isEditing}
+                            type={
+                              key === "phone"
+                                ? "tel"
+                                : key === "passingYear"
+                                ? "number"
+                                : "text"
+                            }
+                            min={key === "passingYear" ? "1900" : undefined}
+                            className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
+                          />
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {isEditing && (
+                  <button
+                    onClick={handleSave}
+                    className="mt-8 w-full py-4 bg-[#8b5cf6] text-white rounded-2xl font-bold hover:bg-[#7c3aed] transition"
+                  >
+                    Save Changes
+                  </button>
+                )}
               </>
             ) : (
               <>
-                <h2 className="text-3xl font-bold text-[#6d28d9] mb-8 tracking-tight font-sans border-l-4 border-[#8b5cf6] pl-4">
+                <h2 className="text-xl font-bold text-indigo-950 mb-6">
                   Security Settings
                 </h2>
+
                 {["current", "new", "confirm"].map((field) => (
                   <div key={field} className="mb-6 relative">
-                    <label className="text-xs font-semibold text-indigo-400 uppercase tracking-wider ml-1">{field} Password</label>
-                    <input placeholder={` ${field} password`} type={showPassword[field] ? "text" : "password"} value={passwords[field]} onChange={e => setPasswords({...passwords, [field]: e.target.value})} className="w-full bg-[#fafaff] border border-indigo-50 p-4 rounded-2xl mt-1 text-indigo-900 focus:ring-2 focus:ring-[#8b5cf6] outline-none" />
-                    <button type="button" onClick={() => toggleVisibility(field)} className="absolute right-4 top-12 text-indigo-300 cursor-pointer">
+
+                    <label className="text-xs font-semibold text-indigo-400 uppercase tracking-wider ml-1">
+                      {field} Password
+                    </label>
+
+                    <input
+                      placeholder={`${field} password`}
+                      type={showPassword[field] ? "text" : "password"}
+                      value={passwords[field]}
+                      onChange={(e) =>
+                        setPasswords({
+                          ...passwords,
+                          [field]: e.target.value
+                        })
+                      }
+                      className="w-full bg-transparent border-b border-indigo-100 px-0 py-2 mt-1 text-indigo-900 outline-none"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => toggleVisibility(field)}
+                      className="absolute right-4 top-12 text-indigo-300 cursor-pointer"
+                    >
                       {showPassword[field] ? <FaEyeSlash /> : <FaEye />}
                     </button>
+
                   </div>
                 ))}
-                <button onClick={() => toast.success("Password Updated!")} className="w-full py-4 bg-[#8b5cf6] text-white rounded-2xl font-bold hover:bg-[#7c3aed] transition cursor-pointer">
+
+                <button
+                  onClick={() => toast.success("Password Updated!")}
+                  className="w-full py-4 bg-[#8b5cf6] text-white rounded-2xl font-bold hover:bg-[#7c3aed] transition"
+                >
                   Update Password
                 </button>
               </>
             )}
+
           </section>
         </div>
       </div>

@@ -86,6 +86,7 @@ export default function Login() {
   };
 
   return (
+    <>
     <div className="min-h-screen flex bg-[#f7f5fb]">
       {/* Toast Notification System */}
       {toast.message ? (
@@ -104,17 +105,13 @@ export default function Login() {
 
       {/* LEFT SIDE: Branding and Visuals */}
       <div className="hidden lg:flex w-1/2 items-center justify-center bg-gradient-to-br from-[#2c1b4d] via-[#3a2363] to-[#23143c] text-white px-12">
-        <div className="max-w-md space-y-6 text-left">
+        <div className="max-w-md space-y-4 text-left">
           <div className="flex items-center gap-3">
-            <div className="bg-white/20 px-4 py-2 rounded-lg text-2xl font-semibold">
-              AI CV
-            </div>
-            <div>
-              <p className="text-xl font-semibold tracking-wide">RANKER</p>
-              <p className="text-xs text-white/70 tracking-widest">
-                SMART - FAST - PRECISE
-              </p>
-            </div>
+            <img
+              src="/images/graphuralogo.webp"
+              alt="Graphura logo"
+              className="h-20 w-auto brightness-0 invert"
+            />
           </div>
           <h2 className="text-3xl font-bold leading-snug">
             Smarter Hiring Starts Here
@@ -124,9 +121,9 @@ export default function Login() {
             most relevant candidates in minutes using AI powered ranking.
           </p>
           <img
-            src="/images/Aiimage.png"
+            src="/images/Aiimage.webp"
             alt="AI Resume"
-            className="w-full max-w-sm rounded-xl shadow-xl"
+            className="w-full max-w-sm rounded-xl shadow-xl animate-[float_6s_ease-in-out_infinite]"
           />
         </div>
       </div>
@@ -307,5 +304,12 @@ export default function Login() {
         </div>
       ) : null}
     </div>
+    <style jsx>{`
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-16px); }
+      }
+    `}</style>
+    </>
   );
 }

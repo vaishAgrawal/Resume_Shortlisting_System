@@ -57,48 +57,48 @@ export default function Signup() {
 
   return (
 
-    <div className="min-h-screen flex bg-[#f7f5fb]">
+    <div className="min-h-screen w-full flex bg-[#f7f5fb]">
 
-      {/* LEFT SIDE */}
-      <div className="hidden lg:flex w-1/2 items-center justify-center bg-gradient-to-br from-[#2c1b4d] via-[#3a2363] to-[#23143c] text-white px-12">
+      {/* LEFT SIDE - Fixed and Centered */}
+<div className="hidden lg:flex w-1/2 h-screen sticky top-0 items-center justify-center bg-gradient-to-br from-[#2c1b4d] via-[#3a2363] to-[#23143c] text-white px-12">
+  
+  {/* Added flex-col and items-center to center content vertically and horizontally */}
+  <div className="flex flex-col items-start text-left max-w-md space-y-4 w-full">
 
-        <div className="max-w-md space-y-6 text-left">
+    <div className="flex items-center gap-3">
+      <img
+        src="/images/graphuralogo.webp"
+        alt="Graphura logo"
+        className="h-20 w-auto brightness-0 invert"
+      />
+    </div>
 
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 px-4 py-2 rounded-lg text-2xl font-semibold">
-              AI CV
-            </div>
+    <h2 className="text-3xl font-bold leading-snug">
+      Smarter Hiring Starts Here
+    </h2>
 
-            <div>
-              <p className="text-xl font-semibold tracking-wide">RANKER</p>
-              <p className="text-xs text-white/70 tracking-widest">
-                SMART - FAST - PRECISE
-              </p>
-            </div>
-          </div>
+    <p className="text-white/80 text-sm">
+      Upload resumes, match them to job descriptions and discover the
+      most relevant candidates in minutes using AI powered ranking.
+    </p>
 
-          <h2 className="text-3xl font-bold leading-snug">
-            Smarter Hiring Starts Here
-          </h2>
+    <img
+      src="/images/Aiimage.webp"
+      alt="AI Resume"
+      className="w-full max-w-sm rounded-xl shadow-xl animate-[float_6s_ease-in-out_infinite]"
+    />
 
-          <p className="text-white/80 text-sm">
-            Upload resumes, match them to job descriptions and discover the
-            most relevant candidates in minutes using AI powered ranking.
-          </p>
-
-          <img
-            src="/images/Aiimage.png"
-            alt="AI Resume"
-            className="w-full max-w-sm rounded-xl shadow-xl"
-          />
-
-        </div>
-      </div>
-
+  </div>
+  <style jsx>{`
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-16px); }
+    }
+  `}</style>
+</div>
 
       {/* RIGHT SIDE */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center px-6">
-
+        <div className="flex w-full lg:w-1/2 h-screen overflow-y-auto items-start justify-center px-6 py-8 lg:py-8">
         <div className="w-full max-w-xl bg-white rounded-2xl shadow-xl p-8">
 
           <a href="/" className="text-sm text-gray-500 hover:text-gray-800">

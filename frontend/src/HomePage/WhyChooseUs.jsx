@@ -12,7 +12,7 @@ export default function WhyChooseUs() {
             Why Choose Us?
           </h2>
           <div className="w-24 h-1 bg-[#8b5cf6] mx-auto rounded-full mb-6"></div>
-          <p className="text-gray-600 max-w-2xl mx-auto text-lg font-body">
+          <p className="text-gray-600 max-w-2xl mx-auto text-xl font-body">
             Revolutionizing the recruitment process with cutting-edge AI
             technology.
           </p>

@@ -70,30 +70,30 @@ export default function Navbar() {
     window.location.href = "/"; // Redirect to home
   };
   
-  const handleRecruiterClick = () => {
+  const handleDashboardClick = () => {
     const token = localStorage.getItem("jwtToken");
-    if (token) {
-      window.location.href = "/recruiter";
-    } else {
-      alert("Access Denied: Please login first.");
+    if (!token) {
+      window.location.href = "/login";
+      return;
     }
+    const role = (localStorage.getItem("role") || "").toUpperCase();
+    window.location.href = role === "RECRUITER" ? "/recruiter" : "/user-dashboard";
   };
   return (
     <>
       
       <nav
-        className="fixed w-full z-50 transition-all duration-300 glass-nav shadow-lg bg-white/90 backdrop-blur-md"
+        className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-7xl transition-all duration-300 shadow-lg bg-[#ede9fe]/90 backdrop-blur-md rounded-full border border-[#d9cdfd]"
         id="navbar"
       >
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="px-4 sm:px-6 lg:px-8">
           
           <div className="flex justify-between items-center h-20">
             
             <a href="/" className="flex-shrink-0 flex items-center gap-2 group">
               
               <img
-                src="/images/graphuralogo.png"
+                src="/images/graphuralogo.webp"
                 alt="Graphura Logo"
                 className="h-16 w-auto transition-transform duration-300 group-hover:scale-105 group-hover:rotate-2"
               />
@@ -102,32 +102,32 @@ export default function Navbar() {
               
               <a
                 href="/"
-                className="text-gray-800 hover:text-brand-primary font-medium transition hover-underline-animation"
+                className="text-gray-800 hover:text-[#8b5cf6] font-medium transition hover-underline-animation"
               >
                 
                 Home
               </a>
               <button
-                onClick={handleRecruiterClick}
-                className="text-gray-800 hover:text-brand-primary font-medium transition hover-underline-animation"
+                onClick={handleDashboardClick}
+                className="text-gray-800 hover:text-[#8b5cf6] font-medium transition hover-underline-animation"
                 type="button"
               >
                 
-                Recruiter
+                Dashboard
               </button>
               {!isAuthed ? (
                 <div className="flex items-center space-x-6">
                   
                   <a
                     href="/login"
-                    className="text-gray-800 hover:text-brand-primary font-medium transition hover-underline-animation"
+                    className="text-gray-800 hover:text-[#8b5cf6] font-medium transition hover-underline-animation"
                   >
                     
                     Login
                   </a>
                   <a
                     href="/signup"
-                    className="px-6 py-2.5 rounded-full bg-brand-primary text-white font-semibold shadow-lg hover:bg-brand-primary transition-all duration-300 w-full z-50 relative"
+                    className="px-6 py-2.5 rounded-full bg-[#8b5cf6] text-white font-semibold shadow-lg hover:bg-[#8b5cf6] transition-all duration-300 w-full z-50 relative"
                   >
                     
                     Sign Up
@@ -204,7 +204,7 @@ export default function Navbar() {
           <a
             href="/"
             onClick={() => setMobileOpen(false)}
-            className="text-gray-800 hover:text-brand-primary font-medium text-lg"
+            className="text-gray-800 hover:text-[#8b5cf6] font-medium text-lg"
           >
             
             Home
@@ -212,13 +212,13 @@ export default function Navbar() {
           <button
             onClick={() => {
               setMobileOpen(false);
-              handleRecruiterClick();
+              handleDashboardClick();
             }}
-            className="text-gray-800 hover:text-brand-primary font-medium text-lg"
+            className="text-gray-800 hover:text-[#8b5cf6] font-medium text-lg"
             type="button"
           >
             
-            Recruiter
+            Dashboard
           </button>
           {!isAuthed ? (
             <div className="flex flex-col items-center space-y-2 w-full">
@@ -228,7 +228,7 @@ export default function Navbar() {
                 onClick={() => {
                   setMobileOpen(false);
                 }}
-                className="text-gray-800 hover:text-brand-primary font-medium w-full"
+                className="text-gray-800 hover:text-[#8b5cf6] font-medium w-full"
               >
                 
                 Login
@@ -238,7 +238,7 @@ export default function Navbar() {
                 onClick={() => {
                   setMobileOpen(false);
                 }}
-                className="px-6 py-2.5 rounded-full bg-brand-primary text-white font-semibold shadow-lg hover:bg-brand-primary transition-all duration-300 w-full"
+                className="px-6 py-2.5 rounded-full bg-[#8b5cf6] text-white font-semibold shadow-lg hover:bg-[#8b5cf6] transition-all duration-300 w-full"
               >
                 
                 Sign Up
