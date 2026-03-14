@@ -1,14 +1,14 @@
 package com.resumeshortlist.resume_shortlist_backend.dto;
 
+import lombok.Data;
+
+@Data
 public class ProfileUpdateRequest {
-    private String name;
-
-    // Getters and Setters
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    private String firstName;
+    private String lastName;
+    private String phone;
+    private String college;
+    private String degree;
+    private Integer passingYear;
+    private String location;
 }
