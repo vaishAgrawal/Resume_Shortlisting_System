@@ -24,10 +24,14 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        System.out.println("Received registration request for: " + request.getEmail());
         try {
             String message = authService.register(request);
+            System.out.println("Registration successful for: " + request.getEmail());
             return ResponseEntity.ok(message);
         } catch (Exception e) {
+            System.err.println("Registration failed for " + request.getEmail() + ": " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
