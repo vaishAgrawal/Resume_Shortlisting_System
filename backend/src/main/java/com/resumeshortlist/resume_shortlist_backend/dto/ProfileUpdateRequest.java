@@ -11,4 +11,5 @@ public class ProfileUpdateRequest {
     private String degree;
     private Integer passingYear;
     private String location;
+    private String imageUrl;
 }

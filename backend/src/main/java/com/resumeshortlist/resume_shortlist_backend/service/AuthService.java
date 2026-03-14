@@ -60,6 +60,11 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Error: User not found!"));
 
+        String requestedRole = request.getRole().toUpperCase();
+        if (!user.getRole().name().equals(requestedRole)) {
+            throw new RuntimeException("Invalid credentials"); // Generic error for security
+        }
+        
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
         throw new RuntimeException("Invalid credentials");
         }

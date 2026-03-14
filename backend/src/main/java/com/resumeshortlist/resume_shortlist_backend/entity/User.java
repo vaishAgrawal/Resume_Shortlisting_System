@@ -49,4 +49,9 @@ public class User {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+        // In User.java
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String imageUrl;
 }

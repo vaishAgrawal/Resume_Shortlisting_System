@@ -10,12 +10,14 @@ import {
   FiCalendar
 } from "react-icons/fi";
 import { Toaster, toast } from "react-hot-toast";
+import api from "../api/axios";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("info");
   const [showPassword, setShowPassword] = useState({ current: false, new: false, confirm: false });
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [profile, setProfile] = useState({
     firstName: "",
@@ -30,23 +32,85 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem("profileData");
-    if (saved) setProfile(JSON.parse(saved));
+    const fetchProfile = async () => {
+      try {
+        const response = await api.get("/auth/profile");
+        const data = response.data;
+        
+        // Split backend full name into first and last name for the UI
+        const nameParts = data.name.split(" ");
+        setProfile({
+          firstName: nameParts[0] || "",
+          lastName: nameParts.slice(1).join(" ") || "",
+          email: data.email,
+          phone: data.phone || "",
+          college: data.college || "",
+          degree: data.degree || "",
+          passingYear: data.passingYear || "",
+          location: data.location || "",
+          imageUrl: data.imageUrl || "" // Handle image separately if needed
+        });
+      } catch (err) {
+        toast.error("Failed to load profile data");
+      }
+    };
+    fetchProfile();
   }, []);
 
-  const handleSave = () => {
-    localStorage.setItem("profileData", JSON.stringify(profile));
-    toast.success("Profile Updated Successfully!");
-    setIsEditing(false);
-  };
+  // 1. Updated handleAvatarChange
+const handleAvatarChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    // Basic validation: max 2MB
+    if (file.size > 2000000) {
+      toast.error("Image too large! Please choose a file under 2MB.");
+      return;
+    }
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () =>
-        setProfile((prev) => ({ ...prev, imageUrl: reader.result }));
-      reader.readAsDataURL(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfile((prev) => ({ ...prev, imageUrl: reader.result }));
+      toast.success("Preview updated! Click 'Save' to persist.");
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+// 2. Updated handleSave
+const handleSave = async () => {
+  setLoading(true);
+  try {
+    const updatePayload = {
+      ...profile, // This now includes imageUrl (the base64 string)
+      passingYear: parseInt(profile.passingYear)
+    };
+
+    await api.put("/auth/profile", updatePayload);
+    toast.success("Profile and Photo Updated!");
+    setIsEditing(false);
+  } catch (err) {
+    toast.error("Update failed. Check file size.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // 3. CHANGE PASSWORD
+  const handlePasswordUpdate = async () => {
+    if (passwords.new !== passwords.confirm) {
+      toast.error("New passwords do not match!");
+      return;
+    }
+
+    try {
+      await api.put("/auth/profile/password", {
+        currentPassword: passwords.current,
+        newPassword: passwords.new
+      });
+      toast.success("Password Updated!");
+      setPasswords({ current: "", new: "", confirm: "" });
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Password update failed");
     }
   };
 
@@ -334,7 +398,7 @@ export default function ProfilePage() {
                 ))}
 
                 <button
-                  onClick={() => toast.success("Password Updated!")}
+                  onClick={handlePasswordUpdate}
                   className="w-full py-4 bg-[#8b5cf6] text-white rounded-2xl font-bold hover:bg-[#7c3aed] transition"
                 >
                   Update Password

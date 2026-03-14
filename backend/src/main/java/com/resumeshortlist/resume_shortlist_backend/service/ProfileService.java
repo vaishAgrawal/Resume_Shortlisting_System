@@ -35,6 +35,10 @@ public class ProfileService {
         if (request.getPassingYear() != null) user.setGraduationYear(request.getPassingYear());
         if (request.getLocation() != null) user.setLocation(request.getLocation());
 
+        if (request.getImageUrl() != null) {
+            user.setImageUrl(request.getImageUrl());
+        }
+
         userRepository.save(user);
     }
 
@@ -52,6 +56,7 @@ public class ProfileService {
                 .location(user.getLocation())
                 .username(user.getUsername())
                 .role(user.getRole().name())
+                .imageUrl(user.getImageUrl())
                 .build();
     }
 

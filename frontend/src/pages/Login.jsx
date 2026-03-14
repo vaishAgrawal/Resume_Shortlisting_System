@@ -31,11 +31,11 @@ export default function Login() {
     setLoading(true); // Start loading
 
     // DEBUG: Check what is actually being sent
-    console.log("Attempting login with:", { email, password });
+    console.log("Attempting login with:", { email, password, role: role.toUpperCase() });
 
     try {
       // Step 1: Login to get token and role
-      const response = await api.post("/auth/login", { email, password });
+      const response = await api.post("/auth/login", { email, password , role: role.toUpperCase()});
       console.log("Login success response:", response.data);
       setTempAuthData(response.data); 
 

@@ -19,4 +19,5 @@ public class UserProfileResponse {
     private String location;
     private String username;
     private String role;
+    private String imageUrl;
 }
