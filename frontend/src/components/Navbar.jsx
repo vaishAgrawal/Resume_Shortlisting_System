@@ -10,12 +10,7 @@ export default function Navbar() {
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
   const profileRef = useRef(null);
-  useEffect(() => {
-    const token = localStorage.getItem("jwtToken");
-    const role = localStorage.getItem("role");
-    const userId = localStorage.getItem("userId");
-    setIsAuthed(Boolean(token || role || userId));
-
+  const syncProfile = () => {
     const storedProfile = localStorage.getItem("profileData");
     if (storedProfile) {
       try {
@@ -37,6 +32,22 @@ export default function Navbar() {
         setProfile({ initials: "U", imageUrl: "" });
       }
     }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("jwtToken");
+    const role = localStorage.getItem("role");
+    const userId = localStorage.getItem("userId");
+    setIsAuthed(Boolean(token || role || userId));
+    syncProfile();
+  }, []);
+
+  useEffect(() => {
+    const onProfileUpdated = () => {
+      syncProfile();
+    };
+    window.addEventListener("profileUpdated", onProfileUpdated);
+    return () => window.removeEventListener("profileUpdated", onProfileUpdated);
   }, []);
   useEffect(() => {
     if (!mobileOpen) return;

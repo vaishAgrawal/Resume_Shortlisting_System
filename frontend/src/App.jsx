@@ -13,7 +13,7 @@ import Support from "./pages/Support.jsx";
 import Privacy from "./pages/Privacy.jsx";
 import Signup from "./pages/Signup.jsx";
 import Login from "./pages/Login.jsx";
-import ProfilePage from "./pages/proflie.jsx";
+import ProfilePage from "./pages/U_profile.jsx";
 
 function ProtectedRoute({ children, allowedRole }) {
   const token = localStorage.getItem("jwtToken");
