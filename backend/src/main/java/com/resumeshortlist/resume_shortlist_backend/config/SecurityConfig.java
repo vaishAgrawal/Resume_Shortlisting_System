@@ -36,31 +36,49 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserRepository userRepository;
     private final ApplicationConfig applicationConfig;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            // 1. Disable CSRF (Testing aur Postman ke liye zaroori hai)
             .csrf(csrf -> csrf.disable())
+
+            // 2. Enable CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+            // 3. Stateless session (JWT based)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+            // 4. 🔥 UPDATED AUTHORIZATION RULES
             .authorizeHttpRequests(auth -> auth
-                // Public APIs
-                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/send-otp", "/api/auth/verify-otp").permitAll()
+                // ✅ PUBLIC APIs (Inhe access karne ke liye token nahi chahiye)
+                .requestMatchers(
+                    "/api/auth/**",
+                    "/api/resumes/upload/**",  // 👈 Postman se 50 resumes upload karne ke liye
+                    "/api/resumes/parse/**",   // 👈 Parsing trigger karne ke liye
+                    "/api/resumes/user/**",    // 👈 User ke resumes dekhne ke liye
+                    "/api/job-postings/**",    // 👈 Backend se JD fetch karne ke liye
+                    "/upload", 
+                    "/parse", 
+                    "/resume", 
+                    "/job-description"
+                ).permitAll()
+
+                // 🔒 Protected APIs (Inke liye RECRUITER/USER role chahiye)
+                .requestMatchers("/api/job-postings/manage/**").hasAnyRole("RECRUITER", "ADMIN")
                 
-                // Specific Role Protection Examples (V2 Logic)
-                // Recruiters can manage job postings; Candidates (USER) can view them
-                .requestMatchers("/api/job-postings/**").hasAnyRole("RECRUITER", "ADMIN")
-                .requestMatchers("/api/resumes/**").hasAnyRole("USER", "RECRUITER")
-                
-                // Everything else must be logged in
+                // Baki saari requests ke liye authentication zaroori hai
                 .anyRequest().authenticated()
             )
+
+            // 5. Authentication provider setup
             .authenticationProvider(authenticationProvider())
+
+            // 6. Add JWT Filter before UsernamePassword filter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-    
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -83,13 +101,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Split allowed origins from application.properties
         configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // Cache pre-flight response for 1 hour
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
