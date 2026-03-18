@@ -58,6 +58,8 @@ public class SecurityConfig {
                     "/api/resumes/parse/**",   // 👈 Parsing trigger karne ke liye
                     "/api/resumes/user/**",    // 👈 User ke resumes dekhne ke liye
                     "/api/job-postings/**",    // 👈 Backend se JD fetch karne ke liye
+                    "/api/dashboard/**",       // 👈 Dashboard access ke liye
+                    "/error",                  // 👈 Error handling ke liye
                     "/upload", 
                     "/parse", 
                     "/resume", 

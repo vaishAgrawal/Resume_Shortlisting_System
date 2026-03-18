@@ -219,7 +219,7 @@ public class ResumeParsingService {
             // NOTE: 'gemini-1.5-flash' is the most stable. 2.5-flash does not exist yet.
             // 2.0-flash is experimental. Use 1.5-flash for reliability.
             GenerateContentResponse response = geminiClient.models.generateContent(
-                    "gemini-2.5-flash",
+                    "gemini-pro",
                     prompt,
                     config
             );

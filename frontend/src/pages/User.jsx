@@ -97,14 +97,15 @@ export default function ResumeAnalyzerDashboard() {
         console.log("DEBUG: Checking for previous analysis...");
         const latestRes = await api.get("/dashboard/latest");
         console.log("DEBUG: Latest Analysis Response Status:", latestRes.status);
-        if (latestRes.status === 200 && latestRes.data && latestRes.data.overallScore !== undefined) {
+        if (latestRes.status === 200 && latestRes.data && latestRes.data.overallScore) {
           console.log("DEBUG: Restoring previous analysis result.");
           setAnalysisResult(latestRes.data);
           setRemainingCredits(latestRes.data.remainingCredits);
           setAnalyzed(true);
         } else if (latestRes.status === 200 && latestRes.data) {
-          // If no analysis but we have other data (like credits)
+          // If no analysis but we have other data (like credits), don't show report
           setRemainingCredits(latestRes.data.remainingCredits);
+          setAnalyzed(false);
         } else {
           console.log("DEBUG: No previous analysis found or response was empty.");
         }
@@ -195,49 +196,59 @@ export default function ResumeAnalyzerDashboard() {
         <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28">
         
           {!analyzed && !loading && (
-            <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center animate-in fade-in duration-500">
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold tracking-[0.2em] text-violet-600 uppercase">
-                    Resume Checker
+            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
+              {/* Top Credit Badge - Centered */}
+              {remainingCredits !== null && (
+                <div className="flex justify-center mb-4">
+                  <div className={`px-5 py-2 rounded-full flex items-center gap-2 border shadow-sm backdrop-blur-md transition-all ${
+                    remainingCredits > 0 
+                      ? "bg-emerald-50/80 border-emerald-100 text-emerald-700" 
+                      : "bg-rose-50/80 border-rose-100 text-rose-700 animate-pulse"
+                  }`}>
+                    <Award className={`h-4 w-4 ${remainingCredits > 0 ? "text-emerald-500" : "text-rose-500"}`} />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      {remainingCredits} Free Credits Left
+                    </span>
                   </div>
-                  {remainingCredits !== null && (
-                    <div className={`px-4 py-2 rounded-2xl flex items-center gap-2 border shadow-sm transition-all ${
-                      remainingCredits > 0 
-                        ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
-                        : "bg-rose-50 border-rose-100 text-rose-700 animate-pulse"
-                    }`}>
-                      <Award className={`h-4 w-4 ${remainingCredits > 0 ? "text-emerald-500" : "text-rose-500"}`} />
-                      <span className="text-xs font-bold">
-                        {remainingCredits} Free Credits Left
-                      </span>
-                    </div>
-                  )}
                 </div>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
-                  Is your resume good enough?
-                </h1>
-                <p className="text-lg text-slate-600 max-w-xl">
-                  A free and fast AI resume checker doing 16 crucial checks to ensure your resume
-                  is ready to perform and get you interview callbacks.
-                </p>
+              )}
+
+              <div className="grid lg:grid-cols-2 gap-16 items-center">
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <div className="text-xs font-bold tracking-[0.25em] text-violet-500 uppercase opacity-80">
+                      RESUME CHECKER
+                    </div>
+                    <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
+                      Is your resume <br />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
+                        good enough?
+                      </span>
+                    </h1>
+                    <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
+                      A free and fast AI resume checker doing 16 crucial checks to ensure your resume
+                      is ready to perform and get you interview callbacks.
+                    </p>
+                  </div>
 
                 <section className="max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8">
                   <div className="space-y-6">
                     {!file ? (
-                      <label className="block border-2 border-dashed border-violet-300 rounded-2xl p-8 text-center cursor-pointer hover:border-violet-500 hover:bg-violet-50/60 transition-all">
-                        <Upload className="mx-auto w-10 h-10 text-violet-600 mb-4" />
-                        <h3 className="text-lg font-bold text-slate-900">Drop your resume here or choose a file.</h3>
-                        <p className="text-sm text-slate-500 mt-2">PDF & DOCX only. Max 2MB file size.</p>
-                        <input type="file" className="hidden" onChange={(e) => setFile(e.target.files[0])} />
-                        <div className="mt-6 inline-flex items-center justify-center rounded-xl bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-violet-700 transition">
-                          Upload Your Resume
+                      <label className="group block border-2 border-dashed border-violet-200 rounded-[2rem] p-12 text-center cursor-pointer hover:border-violet-400 hover:bg-violet-50/40 transition-all duration-300">
+                        <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 group-hover:scale-110 transition-transform">
+                          <Upload className="w-8 h-8" />
                         </div>
-                        <div className="mt-4 flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-violet-100 text-violet-600">
-                            <CheckCircle2 className="h-4 w-4" />
-                          </span>
-                          Privacy guaranteed
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">Drop your resume here or choose a file.</h3>
+                        <p className="text-sm text-slate-500 mb-8">PDF & DOCX only. Max 2MB file size.</p>
+                        <input type="file" className="hidden" onChange={(e) => setFile(e.target.files[0])} />
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="inline-flex items-center justify-center rounded-2xl bg-violet-600 px-8 py-4 text-base font-bold text-white shadow-xl shadow-violet-200 hover:bg-violet-700 hover:-translate-y-0.5 transition-all active:scale-95">
+                            Upload Your Resume
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                             <CheckCircle2 className="h-4 w-4 text-violet-400" />
+                             Privacy guaranteed
+                          </div>
                         </div>
                       </label>
                     ) : (
@@ -298,15 +309,19 @@ export default function ResumeAnalyzerDashboard() {
                 </section>
               </div>
 
-              <div className="flex justify-center lg:justify-end">
-                <div className="relative w-full max-w-xl">
-                  <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-br from-emerald-300/40 via-violet-300/40 to-sky-200/40 blur-2xl"></div>
-                  <div className="relative rounded-[28px] bg-white/70 p-5 shadow-[0_35px_80px_-45px_rgba(30,41,59,0.45)] backdrop-blur-xl border border-white/70">
-                    <img
-                      src="/images/resume.webp"
-                      alt="Resume analysis preview"
-                      className="w-full rounded-2xl shadow-xl animate-[float_7s_ease-in-out_infinite]"
-                    />
+                <div className="hidden lg:block">
+                  <div className="relative group">
+                    <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-tr from-violet-400/30 via-fuchsia-300/30 to-indigo-300/30 blur-3xl group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="relative rounded-[2.5rem] bg-white/40 p-3 shadow-2xl backdrop-blur-2xl border border-white/50 overflow-hidden transform hover:scale-[1.02] transition-transform duration-500">
+                      <img
+                        src="/images/resume_mockup.png"
+                        alt="Resume analysis preview"
+                        className="w-full h-auto rounded-[2rem] shadow-sm transform group-hover:translate-y-[-5px] transition-transform duration-700"
+                        onError={(e) => {
+                          e.target.src = "https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=2070&auto=format&fit=crop";
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

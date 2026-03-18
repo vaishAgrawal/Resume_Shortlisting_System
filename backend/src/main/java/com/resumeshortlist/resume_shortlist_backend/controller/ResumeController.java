@@ -17,18 +17,30 @@ public class ResumeController {
     private final FileUploadService fileUploadService;
     private final ResumeParsingService resumeParsingService;
 
+    // 1. Dashboard User Upload (No Job ID needed)
+    @PostMapping("/upload/{userId}")
+    public ResponseEntity<?> uploadResumesForUser(
+            @PathVariable Long userId,
+            @RequestPart("files") MultipartFile[] files) {
+        try {
+            List<Resume> saved = fileUploadService.uploadMultipleResumes(userId, files);
+            return ResponseEntity.ok(saved); // Return the list of objects so frontend gets IDs
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Upload failed: " + e.getMessage());
+        }
+    }
+
+    // 2. Recruiter Job-Specific Upload
     @PostMapping("/upload/{userId}/{jobId}")
-    public ResponseEntity<?> uploadResumes(
+    public ResponseEntity<?> uploadResumesForJob(
             @PathVariable Long userId,
             @PathVariable Long jobId,
             @RequestPart("files") MultipartFile[] files) {
 
         try {
-            // 1. Files ko local storage/DB mein save karo
             List<Resume> saved = fileUploadService.uploadMultipleResumes(userId, files);
 
-            // 2. 🔥 FIXED LOGIC: Nayi service ke hisaab se call
-            // Hum loop chala kar har resume ko parse karne ke liye bhej rahe hain
+            // Parsing handle karna (Optional: dashboard uses separate /analyze step)
             for (Resume resume : saved) {
                 try {
                     resumeParsingService.parseAndSaveResume(resume.getId());
@@ -37,12 +49,7 @@ public class ResumeController {
                 }
             }
 
-            // Dynamic Response Message
-            String responseMessage = String.format("Upload successful! %d resumes are being processed for Job ID: %d", 
-                                                    saved.size(), jobId);
-
-            return ResponseEntity.ok(responseMessage);
-
+            return ResponseEntity.ok(saved); // Consistently return the objects
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Upload failed: " + e.getMessage());
         }
