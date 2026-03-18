@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
@@ -23,5 +24,7 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
     @Transactional
     @Query("DELETE FROM JobPosting j WHERE j.createdBy.id = :userId")
     void bulkDeleteByUserId(@Param("userId") Long userId);
+
+    Optional<JobPosting> findFirstByTitleContainingIgnoreCaseOrDepartmentContainingIgnoreCase(String title, String department);
 
 }

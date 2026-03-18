@@ -7,17 +7,32 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  Briefcase,
+  GraduationCap,
+  Award,
+  Link,
+  Github,
+  Mail,
+  Phone,
+  User as UserIcon
 } from "lucide-react";
+import api from "../api/axios";
 
 export default function ResumeAnalyzerDashboard() {
   const [file, setFile] = useState(null);
   const [analyzed, setAnalyzed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [score] = useState(85);
+  const [analysisResult, setAnalysisResult] = useState(null);
   const [jobDomain, setJobDomain] = useState("");
+  const [availableDomains, setAvailableDomains] = useState([]);
   const [activeStep, setActiveStep] = useState(0);
   const [openContentRow, setOpenContentRow] = useState(null);
+  const [error, setError] = useState(null);
+  const [showFullReport, setShowFullReport] = useState(false);
+  const [remainingCredits, setRemainingCredits] = useState(null);
+  
+  const score = analysisResult?.overallScore || 0;
   const radius = 50;
   const halfCircumference = Math.PI * radius;
   const gaugeOffset = halfCircumference - halfCircumference * (score / 100);
@@ -28,30 +43,17 @@ export default function ResumeAnalyzerDashboard() {
     "Extracting your skills",
     "Generating recommendations"
   ];
-  const reportRows = [
-    { category: "Format", feedback: "Excellent.", score: 15, total: 15, tone: "good" },
-    { category: "Contact", feedback: "Complete.", score: 5, total: 5, tone: "good" },
-    { category: "Summary", feedback: "Profile overview check.", score: 10, total: 10, tone: "good" },
-    { category: "Skills", feedback: "No skills extracted.", score: 0, total: 15, tone: "bad" },
-    { category: "Experience", feedback: "Add quantified achievements (numbers/%) to boost score.", score: 10, total: 20, tone: "warn" },
-    { category: "Projects", feedback: "Good projects.", score: 15, total: 15, tone: "good" },
-    { category: "Education", feedback: "Verified.", score: 10, total: 10, tone: "good" },
-    { category: "Certifications", feedback: "Verified.", score: 5, total: 5, tone: "good" },
-    { category: "Tone/Grammar", feedback: "Professional tone check.", score: 5, total: 5, tone: "good" }
-  ];
-  const contentChecks = [
-    { label: "Comprehensiveness", status: "good", detail: "All core sections are present and balanced." },
-    { label: "Action Verbs", status: "good", detail: "Strong verbs used across experience entries." },
-    { label: "Repetition", status: "bad", detail: "Repeated phrases detected in the skills section." },
-    { label: "Job Description Length", status: "bad", detail: "Summary is short compared to the target role." },
-    { label: "Dates Consistency", status: "warn", detail: "Two entries have missing or uneven date formats." }
-  ];
-  const scoreBuckets = [
-    { label: "Format ", score: 75 },
-    { label: "Style", score: 60 },
-    { label: "Summary", score: 80 },
-    { label: "Skills", score: 88 }
-  ];
+  const reportRows = analysisResult?.breakdown || [];
+  const contentChecks = analysisResult?.breakdown?.map(item => ({
+    label: item.category,
+    status: item.score >= (item.total * 0.8) ? "good" : item.score >= (item.total * 0.5) ? "warn" : "bad",
+    detail: item.feedback
+  })) || [];
+
+  const scoreBuckets = reportRows.map(item => ({
+    label: item.category,
+    score: Math.round((item.score / item.total) * 100)
+  }));
   const actionVerbs = [
     { label: "Led", status: "good" },
     { label: "Responsible for", status: "good" },
@@ -60,35 +62,58 @@ export default function ResumeAnalyzerDashboard() {
   ];
   const highlightSections = [
     {
-      label: "Projects",
-      status: "Needs Improvement",
-      verified: false,
-      detail: "3 projects highlighted with clear outcomes",
-      suggestions: [
-        "Add live links or repo URLs for each project",
-        "Use a consistent format: Role, Tech, Impact"
-      ]
+      label: "Experience",
+      status: analysisResult?.experience?.length > 0 ? "Verified" : "Missing",
+      verified: analysisResult?.experience?.length > 0,
+      detail: `${analysisResult?.experience?.length || 0} roles found`,
+      suggestions: analysisResult?.experience?.length === 0 ? ["No work experience extracted."] : []
     },
     {
       label: "Education",
-      status: "Needs Review",
-      verified: false,
-      detail: "B.Tech in CSE - 2021",
-      suggestions: [
-        "Standardize date format (e.g., May 2021)",
-        "Add GPA or honors if strong"
-      ]
+      status: analysisResult?.education?.length > 0 ? "Verified" : "Missing",
+      verified: analysisResult?.education?.length > 0,
+      detail: `${analysisResult?.education?.length || 0} degrees found`,
+      suggestions: analysisResult?.education?.length === 0 ? ["No education details extracted."] : []
     },
     {
-      label: "Certifications",
-      status: "Verified",
-      verified: true,
-      detail: "AWS CCP, Google Analytics",
-      suggestions: []
+      label: "Skills",
+      status: analysisResult?.extractedSkills?.length > 0 ? "Verified" : "Missing",
+      verified: analysisResult?.extractedSkills?.length > 0,
+      detail: `${analysisResult?.extractedSkills?.length || 0} skills found`,
+      suggestions: analysisResult?.extractedSkills?.length === 0 ? ["No skills extracted."] : []
     }
   ];
   const highlightSuggestions = highlightSections.filter((section) => section.suggestions.length > 0);
 
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        // 1. Fetch available domains
+        const domainRes = await api.get("/dashboard/domains");
+        setAvailableDomains(domainRes.data);
+
+        // 2. Fetch latest analysis result
+        console.log("DEBUG: Checking for previous analysis...");
+        const latestRes = await api.get("/dashboard/latest");
+        console.log("DEBUG: Latest Analysis Response Status:", latestRes.status);
+        if (latestRes.status === 200 && latestRes.data && latestRes.data.overallScore !== undefined) {
+          console.log("DEBUG: Restoring previous analysis result.");
+          setAnalysisResult(latestRes.data);
+          setRemainingCredits(latestRes.data.remainingCredits);
+          setAnalyzed(true);
+        } else if (latestRes.status === 200 && latestRes.data) {
+          // If no analysis but we have other data (like credits)
+          setRemainingCredits(latestRes.data.remainingCredits);
+        } else {
+          console.log("DEBUG: No previous analysis found or response was empty.");
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial dashboard data:", err);
+      }
+    };
+    fetchInitialData();
+  }, []);
 
   useEffect(() => {
     if (!loading) return;
@@ -102,12 +127,60 @@ export default function ResumeAnalyzerDashboard() {
     return () => clearInterval(interval);
   }, [loading, analysisSteps.length]);
 
-  const analyzeResume = () => {
+  const analyzeResume = async () => {
+    console.log("Analyze button clicked. File:", file?.name, "Domain:", jobDomain);
+    if (!file || !jobDomain) {
+      console.warn("Analysis cancelled: missing file or domain.");
+      return;
+    }
+    
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    setError(null);
+    setActiveStep(0);
+    
+    try {
+      // 1. Upload Resume
+      const userId = localStorage.getItem("userId");
+      const token = localStorage.getItem("jwtToken");
+      console.log("DEBUG: Analysis Start. UserID:", userId, "Token Present:", !!token);
+      if (token) console.log("DEBUG: Token starts with:", token.substring(0, 20) + "...");
+      if (!userId) throw new Error("User ID not found in session. Please log in again.");
+      
+      const formData = new FormData();
+      formData.append("files", file); // Backend expects "files" (plural)
+      
+      console.log(`Sending upload request to: /resumes/upload/${userId}`);
+      const uploadRes = await api.post(`/resumes/upload/${userId}`, formData);
+      
+      console.log("Upload response:", uploadRes.data);
+      if (!uploadRes.data || uploadRes.data.length === 0) {
+        throw new Error("Backend saved no resumes. Is the file too large or corrupted?");
+      }
+      
+      const resumeId = uploadRes.data[0].id;
+      console.log("Extracted Resume ID:", resumeId);
+      
+      // 2. Start Analysis
+      const analysisRes = await api.post("/dashboard/analyze", {
+        resumeId,
+        domain: jobDomain
+      });
+      
+      console.log("Analysis results received:", analysisRes.data);
+      setAnalysisResult(analysisRes.data);
+      setRemainingCredits(analysisRes.data.remainingCredits);
       setAnalyzed(true);
-    }, 2500);
+    } catch (err) {
+      console.error("DEBUG: FULL ERROR OBJECT:", err);
+      if (err.response) {
+        console.error("DEBUG: BACKEND RESPONSE DATA:", JSON.stringify(err.response.data, null, 2));
+        console.error("DEBUG: STATUS:", err.response.status);
+      }
+      const errorMessage = err.response?.data?.message || err.response?.data || err.message || "An unexpected error occurred.";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleContentRow = (index) => {
@@ -124,8 +197,22 @@ export default function ResumeAnalyzerDashboard() {
           {!analyzed && !loading && (
             <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center animate-in fade-in duration-500">
               <div className="space-y-8">
-                <div className="text-xs font-semibold tracking-[0.2em] text-violet-600 uppercase">
-                  Resume Checker
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-semibold tracking-[0.2em] text-violet-600 uppercase">
+                    Resume Checker
+                  </div>
+                  {remainingCredits !== null && (
+                    <div className={`px-4 py-2 rounded-2xl flex items-center gap-2 border shadow-sm transition-all ${
+                      remainingCredits > 0 
+                        ? "bg-emerald-50 border-emerald-100 text-emerald-700" 
+                        : "bg-rose-50 border-rose-100 text-rose-700 animate-pulse"
+                    }`}>
+                      <Award className={`h-4 w-4 ${remainingCredits > 0 ? "text-emerald-500" : "text-rose-500"}`} />
+                      <span className="text-xs font-bold">
+                        {remainingCredits} Free Credits Left
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
                   Is your resume good enough?
@@ -162,6 +249,7 @@ export default function ResumeAnalyzerDashboard() {
                           <p className="text-sm font-semibold text-slate-800">Resume Uploaded</p>
                           <p className="text-xs text-slate-500 truncate">{file.name}</p>
                         </div>
+                        <button onClick={() => setFile(null)} className="text-xs text-rose-500 font-semibold underline">Change</button>
                       </div>
                     )}
 
@@ -175,18 +263,27 @@ export default function ResumeAnalyzerDashboard() {
                             className="w-full rounded-xl border border-violet-200 bg-white/90 px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
                           >
                             <option value="" disabled>Select a domain</option>
-                            <option value="software">Software Engineering</option>
-                            <option value="data">Data & Analytics</option>
-                            <option value="product">Product Management</option>
-                            <option value="design">UI/UX Design</option>
-                            <option value="marketing">Marketing</option>
-                            <option value="sales">Sales</option>
-                            <option value="finance">Finance</option>
-                            <option value="hr">HR & Recruiting</option>
+                            {availableDomains.length > 0 ? (
+                              availableDomains.map((domain) => (
+                                <option key={domain} value={domain}>
+                                  {domain}
+                                </option>
+                              ))
+                            ) : (
+                              <option disabled>Loading domains...</option>
+                            )}
                           </select>
                         </div>
 
-                        {jobDomain ? (
+                        {remainingCredits === 0 ? (
+                          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-center">
+                            <p className="text-sm font-bold text-rose-700">You've used all your free credits!</p>
+                            <p className="text-xs text-rose-600 mt-1">Upgrade to Premium to continue analyzing resumes.</p>
+                            <button className="mt-4 w-full py-3 bg-violet-600 text-white rounded-xl font-bold hover:bg-violet-700 transition shadow-lg">
+                              View Pricing
+                            </button>
+                          </div>
+                        ) : jobDomain ? (
                           <button onClick={analyzeResume} className="w-full px-10 py-4 bg-violet-600 text-white rounded-2xl font-bold hover:bg-violet-700 transition">
                             Analyze Now
                           </button>
@@ -213,6 +310,17 @@ export default function ResumeAnalyzerDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-8 p-6 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 animate-in fade-in zoom-in duration-300">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-6 h-6" />
+                <h3 className="font-bold">Analysis Error</h3>
+              </div>
+              <p className="mt-2 text-sm">{error}</p>
+              <button onClick={() => setLoading(false)} className="mt-4 text-sm font-bold underline">Try Again</button>
             </div>
           )}
 
@@ -288,9 +396,30 @@ export default function ResumeAnalyzerDashboard() {
           <div className="animate-in fade-in duration-700">
             <div className="grid gap-6 lg:grid-cols-[0.9fr_1.7fr]">
               <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.4)] p-6 sm:p-8">
-                <div className="flex items-center gap-3 text-slate-600">
-                  <div className="h-10 w-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">R</div>
-                  <span className="text-lg font-semibold">ResumeIQ</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-slate-600">
+                    <div className="h-10 w-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">R</div>
+                    <span className="text-lg font-semibold">ResumeIQ</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {remainingCredits !== null && (
+                      <div className="px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100 text-violet-600 font-bold text-[10px] uppercase tracking-wider shadow-sm">
+                        {remainingCredits} Credits Left
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => {
+                        setAnalyzed(false);
+                        setAnalysisResult(null);
+                        setFile(null);
+                        setJobDomain("");
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all font-bold text-xs border border-violet-100 shadow-sm"
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      New Analysis
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -366,12 +495,42 @@ export default function ResumeAnalyzerDashboard() {
                   ))}
                 </div>
 
-                <button className="mt-8 w-full rounded-2xl bg-slate-900 text-white font-semibold py-3 hover:bg-slate-800 transition">
-                  Unlock Full Report
+                <button 
+                  onClick={() => setShowFullReport(!showFullReport)}
+                  className="mt-8 w-full rounded-2xl bg-slate-900 text-white font-semibold py-3 hover:bg-slate-800 transition"
+                >
+                  {showFullReport ? "Hide Detailed Report" : "View Detailed Report"}
+                </button>
+
+                <button 
+                  onClick={() => {
+                    setAnalyzed(false);
+                    setAnalysisResult(null);
+                    setFile(null);
+                    setJobDomain("");
+                  }}
+                  className="mt-4 w-full rounded-2xl border-2 border-slate-200 bg-white text-slate-600 font-bold py-3 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  Analyze Another Resume
                 </button>
               </div>
 
               <div className="space-y-6">
+                {/* Dynamic Professional Summary */}
+                {analysisResult?.professionalSummary && (
+                  <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-sm p-6 sm:p-8">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-10 w-10 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center">
+                        <UserIcon className="h-5 w-5" />
+                      </div>
+                      <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Professional Summary</p>
+                    </div>
+                    <p className="text-sm text-slate-600 leading-relaxed italic">
+                      "{analysisResult.professionalSummary}"
+                    </p>
+                  </div>
+                )}
                 <div className="rounded-[28px] bg-[#e8edf7] border border-white/70 shadow-[0_35px_80px_-55px_rgba(15,23,42,0.35)] p-6 sm:p-8">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -468,61 +627,97 @@ export default function ResumeAnalyzerDashboard() {
                 </div>
 
                 <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.35)] p-6 sm:p-8">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-6">
                     <div>
-                      <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Profile Highlights</p>
-                      
+                      <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Extracted Details</p>
                     </div>
-                    {highlightSuggestions.length === 0 ? (
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                        {highlightSuggestions.length} Suggestions
-                      </span>
-                    )}
                   </div>
 
-                  <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                    {highlightSections.map((item) => (
-                      <div
-                        key={item.label}
-                        className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            {item.label}
-                          </p>
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                              item.verified ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
-                            }`}
-                          >
-                            {item.status}
-                          </span>
-                        </div>
-                        <p className="mt-3 text-sm font-semibold text-slate-700">{item.detail}</p>
-                        {item.suggestions.length > 0 ? (
-                          <div className="mt-3 space-y-2 text-xs text-slate-500">
-                            <p className="font-semibold uppercase tracking-[0.12em] text-[10px] text-amber-600">
-                              Suggestions
-                            </p>
-                            {item.suggestions.map((suggestion) => (
-                              <p key={suggestion}>- {suggestion}</p>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2 text-xs text-emerald-700">
-                            <div className="flex items-center gap-2 font-semibold">
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              <span>Verified credential</span>
+                  <div className="space-y-8">
+                    {/* Experience Section */}
+                    {analysisResult?.experience?.length > 0 && (
+                      <div className="space-y-4">
+                        <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
+                          <Briefcase className="h-4 w-4 text-violet-500" /> Work Experience
+                        </h4>
+                        <div className="grid gap-4">
+                          {analysisResult.experience.map((exp, i) => (
+                            <div key={i} className="p-4 rounded-2xl bg-slate-50/50 border border-slate-100">
+                              <div className="flex justify-between items-start">
+                                <h5 className="font-bold text-slate-900">{exp.jobTitle}</h5>
+                                <span className="text-[10px] font-bold bg-white px-2 py-1 rounded-full text-slate-500 shadow-sm border border-slate-50">
+                                  {exp.startDate} - {exp.isCurrent ? "Present" : exp.endDate}
+                                </span>
+                              </div>
+                              <p className="text-xs font-semibold text-violet-600 mt-0.5">{exp.company}</p>
+                              <p className="text-xs text-slate-500 mt-2 leading-relaxed line-clamp-2">{exp.description}</p>
                             </div>
-                            <p className="mt-1 text-emerald-700/80">Issuer and credential ID matched.</p>
-                          </div>
-                        )}
+                          ))}
+                        </div>
                       </div>
-                    ))}
+                    )}
+
+                    {/* Education Section */}
+                    {analysisResult?.education?.length > 0 && (
+                      <div className="space-y-4">
+                        <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
+                          <GraduationCap className="h-4 w-4 text-indigo-500" /> Education
+                        </h4>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          {analysisResult.education.map((edu, i) => (
+                            <div key={i} className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                              <h5 className="font-bold text-slate-900 text-sm">{edu.degree}</h5>
+                              <p className="text-xs font-semibold text-indigo-600 mt-0.5">{edu.institution}</p>
+                              <div className="flex items-center justify-between mt-3">
+                                <span className="text-[10px] text-slate-500">{edu.fieldOfStudy}</span>
+                                {edu.gpa && <span className="text-[10px] font-bold text-emerald-600">GPA: {edu.gpa}</span>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Projects Section */}
+                    {analysisResult?.projects?.length > 0 && (
+                      <div className="space-y-4">
+                        <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
+                          <Award className="h-4 w-4 text-emerald-500" /> Projects
+                        </h4>
+                        <div className="grid gap-4">
+                          {analysisResult.projects.map((proj, i) => (
+                            <div key={i} className="p-4 rounded-2xl bg-emerald-50/30 border border-emerald-100/50">
+                              <div className="flex justify-between items-start">
+                                <h5 className="font-bold text-slate-900">{proj.title}</h5>
+                                {proj.url && (
+                                  <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 transition">
+                                    <Link className="h-3.5 w-3.5" />
+                                  </a>
+                                )}
+                              </div>
+                              <p className="text-[10px] font-bold text-emerald-700/70 mt-1 uppercase tracking-wider">{proj.tools}</p>
+                              <p className="text-xs text-slate-600 mt-2 leading-relaxed">{proj.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Skills Section */}
+                    {analysisResult?.extractedSkills?.length > 0 && (
+                      <div className="space-y-4">
+                        <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
+                          <CheckCircle2 className="h-4 w-4 text-amber-500" /> Extracted Skills
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {analysisResult.extractedSkills.map((skill, i) => (
+                            <span key={i} className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-[11px] font-bold text-slate-600 shadow-sm">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

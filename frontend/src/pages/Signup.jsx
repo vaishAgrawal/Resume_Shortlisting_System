@@ -42,7 +42,7 @@ export default function Signup() {
       location,
       collegeName: college,
       degree,
-      graduationYear: parseInt(gradYear),
+      graduationYear: gradYear ? parseInt(gradYear) : null,
       recruiterSecretKey: role === "recruiter" ? secretKey : null
     };
 

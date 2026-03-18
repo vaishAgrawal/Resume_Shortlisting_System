@@ -8,13 +8,11 @@ import com.google.genai.types.GenerateContentResponse;
 import com.resumeshortlist.resume_shortlist_backend.entity.*;
 import com.resumeshortlist.resume_shortlist_backend.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 
-import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -35,9 +33,11 @@ public class ResumeParsingService {
     @Autowired private ExtractedSkillRepository extractedSkillRepository;
 
     @Autowired
+    private FileParserService fileParserService;
+
+    @Autowired
     private Client geminiClient;
 
-    private final Tika tika = new Tika();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Async
@@ -52,10 +52,7 @@ public class ResumeParsingService {
         }
         
         // 2. Extract Text from File
-        File file = new File(resume.getFilePath());
-        if (!file.exists()) throw new RuntimeException("File not found on server: " + resume.getFilePath());
-        
-        String resumeText = tika.parseToString(file);
+        String resumeText = fileParserService.extractText(resume.getFilePath());
         
         // 3. Call Gemini to Structure Data
         String jsonResponse = callGeminiApi(resumeText);

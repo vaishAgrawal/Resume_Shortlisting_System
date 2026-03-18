@@ -14,7 +14,8 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "20572f8f26d8676d82ed563e949c5bc273622c8e84a26973726cbef0086ef4803d8d0e77e42ca78ed76910b0e70e0054b4677cc0aa132eecafc22e51675bdf7d";
+    @org.springframework.beans.factory.annotation.Value("${jwt.secret:20572f8f26d8676d82ed563e949c5bc273622c8e84a26973726cbef0086ef4803d8d0e77e42ca78ed76910b0e70e0054b4677cc0aa132eecafc22e51675bdf7d}")
+    private String secretKey;
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
@@ -57,7 +58,12 @@ public class JwtService {
     }
 
     private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
-        return Keys.hmacShaKeyFor(keyBytes);
+        try {
+            byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (Exception e) {
+            // If not Base64, use raw bytes
+            return Keys.hmacShaKeyFor(secretKey.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        }
     }
 }
