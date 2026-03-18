@@ -41,6 +41,7 @@ public class User {
     private String collegeName;
     private String degree;
     private Integer graduationYear;
+    private Integer credits = 5;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;

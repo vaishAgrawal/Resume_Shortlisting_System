@@ -38,9 +38,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userEmail;
+        String requestUri = request.getRequestURI();
+        System.out.println("JWT Filter: Incoming request to " + requestUri);
 
         // 1. Check if token is present
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("JWT Filter: No Bearer token found in request to: " + request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
@@ -64,9 +67,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new WebAuthenticationDetailsSource().buildDetails(request)
                     );
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("JWT Filter: Successfully authenticated user: " + userEmail);
+                } else {
+                    System.out.println("JWT Filter: Token invalid for user: " + userEmail);
                 }
             }
         } catch (Exception ex) {
+            System.err.println("JWT Filter ERROR for " + requestUri + ": " + ex.getMessage());
+            ex.printStackTrace();
             // If token is invalid/expired or parsing fails, do not block the request.
             // SecurityContext will remain empty and secured endpoints will still be protected
             // by the standard Spring Security authorization rules.

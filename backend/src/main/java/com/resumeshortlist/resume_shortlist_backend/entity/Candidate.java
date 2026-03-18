@@ -44,21 +44,21 @@ public class Candidate {
 
     private LocalDateTime extractedAt;
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Education> educations;
+    private List<Education> educations = new java.util.ArrayList<>();
 
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<WorkExperience> workExperiences;
+    private List<WorkExperience> workExperiences = new java.util.ArrayList<>();
 
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Project> projects;
+    private List<Project> projects = new java.util.ArrayList<>();
 
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ExtractedSkill> extractedSkills;
+    private List<ExtractedSkill> extractedSkills = new java.util.ArrayList<>();
 
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Certification> certifications;
+    private List<Certification> certifications = new java.util.ArrayList<>();
 
     // Also delete Scores linked to this candidate
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CandidateScore> candidateScores;
+    private List<CandidateScore> candidateScores = new java.util.ArrayList<>();
 }

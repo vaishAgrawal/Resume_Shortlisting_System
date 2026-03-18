@@ -16,12 +16,14 @@ public class ApplicationConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> userRepository.findByEmail(username)
-                .map(user -> org.springframework.security.core.userdetails.User
+                .map(user -> {
+                    System.out.println("UserDetailsService: Found user " + user.getEmail());
+                    return org.springframework.security.core.userdetails.User
                         .withUsername(user.getEmail())
                         .password(user.getPassword())
-                        // Spring Security expects ROLE_ prefix for hasRole() checks
                         .authorities("ROLE_" + user.getRole().name())
-                        .build())
+                        .build();
+                })
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 }

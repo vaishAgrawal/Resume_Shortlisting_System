@@ -20,6 +20,7 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface CandidateScoreRepository extends JpaRepository<CandidateScore, Long> {
     List<CandidateScore> findByCandidate(Candidate candidate);
+    Optional<CandidateScore> findFirstByCandidateOrderByScoredAtDesc(Candidate candidate);
     List<CandidateScore> findByJobPosting(JobPosting jobPosting);
     List<CandidateScore> findByJobPostingId(Long jobPostingId);
     @Modifying  
