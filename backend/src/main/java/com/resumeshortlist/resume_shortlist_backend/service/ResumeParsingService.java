@@ -40,7 +40,7 @@ public class ResumeParsingService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Async
+    @Async("parsingTaskExecutor")
     public CompletableFuture<String> parseAndSaveResume(Long resumeId) throws Exception {
         // 1. Fetch Resume Record
         Resume resume = resumeRepository.findById(resumeId)
@@ -215,11 +215,11 @@ public class ResumeParsingService {
         resumeText;
 
         try {
-            // 3. Call Model using the injected Client bean
+            Thread.sleep(1500);
             // NOTE: 'gemini-1.5-flash' is the most stable. 2.5-flash does not exist yet.
             // 2.0-flash is experimental. Use 1.5-flash for reliability.
             GenerateContentResponse response = geminiClient.models.generateContent(
-                    "gemini-pro",
+                    "gemini-2.5-flash",
                     prompt,
                     config
             );
