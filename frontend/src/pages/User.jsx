@@ -8,14 +8,19 @@ import {
   XCircle,
   AlertCircle,
   BarChart3,
-  Briefcase,
-  GraduationCap,
   Award,
   Link,
   Github,
   Mail,
   Phone,
-  User as UserIcon
+  User as UserIcon,
+  Target,
+  Lock,
+  Unlock,
+  Lightbulb,
+  History,     // NEW
+  Download,    // NEW
+  X            // NEW
 } from "lucide-react";
 import api from "../api/axios";
 
@@ -24,97 +29,88 @@ export default function ResumeAnalyzerDashboard() {
   const [analyzed, setAnalyzed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
+  
+  // User Inputs
   const [jobDomain, setJobDomain] = useState("");
+  const [jdText, setJdText] = useState(""); 
   const [availableDomains, setAvailableDomains] = useState([]);
+  
   const [activeStep, setActiveStep] = useState(0);
   const [openContentRow, setOpenContentRow] = useState(null);
   const [error, setError] = useState(null);
   const [showFullReport, setShowFullReport] = useState(false);
-  const [remainingCredits, setRemainingCredits] = useState(null);
   
-  const score = analysisResult?.overallScore || 0;
+  // Subscription States
+  const [remainingCredits, setRemainingCredits] = useState(null);
+  const [userPlan, setUserPlan] = useState("FREE");
+  
+  // NEW: Feature States
+  const [showPricing, setShowPricing] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const score = analysisResult?.totalScore || 0;
   const radius = 50;
   const halfCircumference = Math.PI * radius;
   const gaugeOffset = halfCircumference - halfCircumference * (score / 100);
 
   const analysisSteps = [
-    "Parsing your resume",
-    "Analyzing your experience",
-    "Extracting your skills",
-    "Generating recommendations"
+    "Parsing your resume and JD",
+    "Semantic keyword matching",
+    "Calculating ATS score",
+    "Generating AI recommendations"
   ];
-  const reportRows = analysisResult?.breakdown || [];
-  const contentChecks = analysisResult?.breakdown?.map(item => ({
+
+  const reportRows = analysisResult?.sectionScores || [];
+  const contentChecks = reportRows.map(item => ({
     label: item.category,
-    status: item.score >= (item.total * 0.8) ? "good" : item.score >= (item.total * 0.5) ? "warn" : "bad",
-    detail: item.feedback
-  })) || [];
+    status: item.score >= (item.maxScore * 0.8) ? "good" : item.score >= (item.maxScore * 0.5) ? "warn" : "bad",
+    detail: `You scored ${item.score} out of ${item.maxScore} in this section.`
+  }));
 
   const scoreBuckets = reportRows.map(item => ({
     label: item.category,
-    score: Math.round((item.score / item.total) * 100)
+    score: Math.round((item.score / item.maxScore) * 100)
   }));
+
   const actionVerbs = [
     { label: "Led", status: "good" },
     { label: "Responsible for", status: "good" },
     { label: "Implemented", status: "bad" },
     { label: "Worked on", status: "bad" }
   ];
-  const highlightSections = [
-    {
-      label: "Experience",
-      status: analysisResult?.experience?.length > 0 ? "Verified" : "Missing",
-      verified: analysisResult?.experience?.length > 0,
-      detail: `${analysisResult?.experience?.length || 0} roles found`,
-      suggestions: analysisResult?.experience?.length === 0 ? ["No work experience extracted."] : []
-    },
-    {
-      label: "Education",
-      status: analysisResult?.education?.length > 0 ? "Verified" : "Missing",
-      verified: analysisResult?.education?.length > 0,
-      detail: `${analysisResult?.education?.length || 0} degrees found`,
-      suggestions: analysisResult?.education?.length === 0 ? ["No education details extracted."] : []
-    },
-    {
-      label: "Skills",
-      status: analysisResult?.extractedSkills?.length > 0 ? "Verified" : "Missing",
-      verified: analysisResult?.extractedSkills?.length > 0,
-      detail: `${analysisResult?.extractedSkills?.length || 0} skills found`,
-      suggestions: analysisResult?.extractedSkills?.length === 0 ? ["No skills extracted."] : []
-    }
-  ];
-  const highlightSuggestions = highlightSections.filter((section) => section.suggestions.length > 0);
 
+  const userEmail = localStorage.getItem("userEmail") || "candidate@test.com";
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // 1. Fetch available domains
-        const domainRes = await api.get("/dashboard/domains");
-        setAvailableDomains(domainRes.data);
+        setAvailableDomains([
+          "Software Engineer", "Backend Developer", "Frontend Developer", 
+          "Data Analyst", "Product Manager", "UI/UX Designer"
+        ]);
 
-        // 2. Fetch latest analysis result
-        console.log("DEBUG: Checking for previous analysis...");
-        const latestRes = await api.get("/dashboard/latest");
-        console.log("DEBUG: Latest Analysis Response Status:", latestRes.status);
-        if (latestRes.status === 200 && latestRes.data && latestRes.data.overallScore) {
-          console.log("DEBUG: Restoring previous analysis result.");
-          setAnalysisResult(latestRes.data);
-          setRemainingCredits(latestRes.data.remainingCredits);
-          setAnalyzed(true);
-        } else if (latestRes.status === 200 && latestRes.data) {
-          // If no analysis but we have other data (like credits), don't show report
-          setRemainingCredits(latestRes.data.remainingCredits);
-          setAnalyzed(false);
-        } else {
-          console.log("DEBUG: No previous analysis found or response was empty.");
+        const creditRes = await api.get("/user-cv/credits", {
+          headers: { "user-email": userEmail }
+        });
+        
+        if (creditRes.status === 200) {
+          setRemainingCredits(creditRes.data.atsCreditsRemaining);
+          setUserPlan(creditRes.data.plan);
         }
       } catch (err) {
         console.error("Failed to fetch initial dashboard data:", err);
       }
     };
+
+    // Load Razorpay Script Dynamically
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+
     fetchInitialData();
-  }, []);
+  }, [userEmail]);
 
   useEffect(() => {
     if (!loading) return;
@@ -129,9 +125,8 @@ export default function ResumeAnalyzerDashboard() {
   }, [loading, analysisSteps.length]);
 
   const analyzeResume = async () => {
-    console.log("Analyze button clicked. File:", file?.name, "Domain:", jobDomain);
     if (!file || !jobDomain) {
-      console.warn("Analysis cancelled: missing file or domain.");
+      setError("Please upload a resume and select a domain.");
       return;
     }
     
@@ -140,44 +135,25 @@ export default function ResumeAnalyzerDashboard() {
     setActiveStep(0);
     
     try {
-      // 1. Upload Resume
-      const userId = localStorage.getItem("userId");
-      const token = localStorage.getItem("jwtToken");
-      console.log("DEBUG: Analysis Start. UserID:", userId, "Token Present:", !!token);
-      if (token) console.log("DEBUG: Token starts with:", token.substring(0, 20) + "...");
-      if (!userId) throw new Error("User ID not found in session. Please log in again.");
-      
       const formData = new FormData();
-      formData.append("files", file); // Backend expects "files" (plural)
-      
-      console.log(`Sending upload request to: /resumes/upload/${userId}`);
-      const uploadRes = await api.post(`/resumes/upload/${userId}`, formData);
-      
-      console.log("Upload response:", uploadRes.data);
-      if (!uploadRes.data || uploadRes.data.length === 0) {
-        throw new Error("Backend saved no resumes. Is the file too large or corrupted?");
-      }
-      
-      const resumeId = uploadRes.data[0].id;
-      console.log("Extracted Resume ID:", resumeId);
-      
-      // 2. Start Analysis
-      const analysisRes = await api.post("/dashboard/analyze", {
-        resumeId,
-        domain: jobDomain
+      formData.append("resumeFile", file);
+      formData.append("targetDomain", jobDomain);
+      formData.append("jdText", jdText.trim());
+
+      const analysisRes = await api.post("/user-cv/analyze", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
       });
       
-      console.log("Analysis results received:", analysisRes.data);
       setAnalysisResult(analysisRes.data);
-      setRemainingCredits(analysisRes.data.remainingCredits);
+      
+      const creditRes = await api.get("/user-cv/credits");
+      setRemainingCredits(creditRes.data.atsCreditsRemaining);
+      
       setAnalyzed(true);
     } catch (err) {
-      console.error("DEBUG: FULL ERROR OBJECT:", err);
-      if (err.response) {
-        console.error("DEBUG: BACKEND RESPONSE DATA:", JSON.stringify(err.response.data, null, 2));
-        console.error("DEBUG: STATUS:", err.response.status);
-      }
-      const errorMessage = err.response?.data?.message || err.response?.data || err.message || "An unexpected error occurred.";
+      const errorMessage = err.response?.data?.error || err.response?.data || err.message || "An unexpected error occurred.";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -188,12 +164,197 @@ export default function ResumeAnalyzerDashboard() {
     setOpenContentRow((prev) => (prev === index ? null : index));
   };
 
+  // --- NEW: RAZORPAY PAYMENT LOGIC ---
+  const handlePayment = async (planType, amount) => {
+    try {
+      // 1. Create Order
+      const orderRes = await api.post("/user-cv/create-order", { amount, planType });
+      const orderData = JSON.parse(orderRes.data);
+
+      // 2. Configure Razorpay
+      const options = {
+        key: "YOUR_RAZORPAY_KEY_ID", // TODO: Replace with your actual Test Key ID
+        amount: orderData.amount,
+        currency: "INR",
+        name: "Graphura ATS",
+        description: `Upgrade to ${planType} Plan`,
+        order_id: orderData.id,
+        handler: async function (response) {
+          // 3. Verify Payment
+          try {
+            await api.post("/user-cv/verify-payment", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planType: planType
+            });
+            alert("Payment Successful! Plan Upgraded.");
+            setShowPricing(false);
+            
+            // Refresh Data
+            const creditRes = await api.get("/user-cv/credits");
+            setUserPlan(creditRes.data.plan);
+            setRemainingCredits(creditRes.data.atsCreditsRemaining);
+          } catch (e) {
+            alert("Payment Verification Failed!");
+          }
+        },
+        theme: { color: "#7c3aed" } // Violet branding
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      alert("Failed to initiate payment. Try again.");
+    }
+  };
+
+  // --- NEW: HISTORY LOGIC ---
+  const fetchHistory = async () => {
+    if (userPlan === "FREE") {
+      setShowPricing(true);
+      return;
+    }
+    try {
+      const res = await api.get("/user-cv/history");
+      setHistoryData(res.data);
+      setShowHistory(true);
+    } catch (err) {
+      alert("Failed to load history.");
+    }
+  };
+
+  // --- NEW: PDF DOWNLOAD LOGIC ---
+  const handleDownloadPdf = async () => {
+    if (userPlan !== "PRO") {
+      setShowPricing(true);
+      return;
+    }
+    try {
+      // Fetch history to get the latest analysis ID for download
+      const historyRes = await api.get("/user-cv/history");
+      if (historyRes.data.length === 0) {
+        alert("No analysis found to download.");
+        return;
+      }
+      
+      const latestAnalysisId = historyRes.data[0].id;
+      const response = await api.get(`/user-cv/download-report/${latestAnalysisId}`, { responseType: 'blob' });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Graphura_Optimized_Resume_Report.pdf');
+      document.body.appendChild(link);
+      link.click();
+    } catch (err) {
+      alert("Failed to download report.");
+    }
+  };
+
   return (
     <main className="min-h-screen font-sans text-slate-900 bg-gradient-to-br from-[#f7f3ff] via-[#f1edff] to-[#eef2ff]">
+      
+      {/* PRICING MODAL OVERLAY */}
+      {showPricing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl w-full max-w-4xl p-8 relative animate-in zoom-in duration-300 shadow-2xl">
+            <button onClick={() => setShowPricing(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+              <X className="h-6 w-6" />
+            </button>
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-extrabold text-slate-900">Upgrade Your Career Toolkit</h2>
+              <p className="text-slate-500 mt-2">Unlock advanced AI analysis, missing keywords, and PDF reports.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* STARTER PLAN */}
+              <div className="border-2 border-slate-100 rounded-3xl p-6 hover:border-violet-300 transition-all bg-slate-50/50">
+                <h3 className="text-xl font-bold text-slate-800">Starter Plan</h3>
+                <div className="text-4xl font-extrabold mt-2 mb-6 text-slate-900">₹49 <span className="text-sm font-medium text-slate-400">one-time</span></div>
+                <ul className="space-y-3 text-sm text-slate-600 mb-8">
+                  <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-emerald-500" /> 10 ATS Credits</li>
+                  <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-emerald-500" /> Unlock Missing Skills</li>
+                  <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-emerald-500" /> Basic AI Suggestions</li>
+                  <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-emerald-500" /> Score History Dashboard</li>
+                  <li className="flex gap-2 opacity-50"><XCircle className="h-5 w-5 text-rose-400" /> No PDF Export</li>
+                </ul>
+                <button onClick={() => handlePayment("STARTER", 49)} className="w-full py-3 rounded-xl bg-violet-100 text-violet-700 font-bold hover:bg-violet-200 transition">
+                  Buy Starter
+                </button>
+              </div>
+
+              {/* PRO PLAN */}
+              <div className="border-2 border-violet-500 bg-violet-50/30 rounded-3xl p-6 relative transform md:-translate-y-4 shadow-2xl shadow-violet-200">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-violet-600 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm">
+                  Most Popular
+                </div>
+                <h3 className="text-xl font-bold text-violet-900">Pro Plan</h3>
+                <div className="text-4xl font-extrabold mt-2 mb-6 text-violet-900">₹199 <span className="text-sm font-medium text-slate-500">/month</span></div>
+                <ul className="space-y-3 text-sm text-slate-700 mb-8 font-medium">
+                  <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-violet-600" /> Unlimited ATS Scans</li>
+                  <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-violet-600" /> Full Semantic Analysis</li>
+                  <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-violet-600" /> Score Tracking & History</li>
+                  <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-violet-600" /> Download Optimized PDF Report</li>
+                  <li className="flex gap-2"><CheckCircle2 className="h-5 w-5 text-violet-600" /> 5 AI Resume Rewrites/mo</li>
+                </ul>
+                <button onClick={() => handlePayment("PRO", 199)} className="w-full py-3 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-700 transition shadow-lg shadow-violet-200">
+                  Upgrade to Pro
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HISTORY MODAL OVERLAY */}
+      {showHistory && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl w-full max-w-3xl p-8 relative max-h-[80vh] overflow-y-auto animate-in fade-in duration-300 shadow-2xl">
+             <button onClick={() => setShowHistory(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+              <X className="h-6 w-6" />
+            </button>
+            <h2 className="text-2xl font-extrabold mb-6 flex items-center gap-2 text-slate-800">
+              <History className="text-violet-500 h-6 w-6"/> Scan History
+            </h2>
+            <div className="space-y-4">
+              {historyData.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center p-4 border border-slate-100 rounded-2xl bg-slate-50 hover:bg-slate-100 transition">
+                  <div>
+                    <div className="font-bold text-slate-800 text-lg">Score: {item.totalScore}/100</div>
+                    <div className="text-xs font-semibold text-slate-500 mt-1">
+                      Scanned on: {new Date(item.analyzedAt).toLocaleDateString()} at {new Date(item.analyzedAt).toLocaleTimeString()}
+                    </div>
+                  </div>
+                  <button onClick={() => alert("Loading past report... (Connect to specific ID)")} className="text-sm font-semibold text-violet-600 bg-violet-100 px-4 py-2 rounded-xl hover:bg-violet-200 transition">
+                    View Details
+                  </button>
+                </div>
+              ))}
+              {historyData.length === 0 && (
+                <div className="text-center p-8 border border-dashed border-slate-200 rounded-2xl bg-slate-50">
+                  <p className="text-slate-500 font-medium">No past scans found.</p>
+                </div>
+              )}
+            </div>
+          </div>
+         </div>
+      )}
+
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute -top-32 left-0 h-96 w-96 rounded-full bg-violet-200/45 blur-[120px]"></div>
         <div className="pointer-events-none absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-indigo-300/40 blur-[140px]"></div>
-        <div className="max-w-7xl mx-auto px-6 py-20 lg:py-28">
+        
+        {/* TOP NAVIGATION UTILITY BAR */}
+        <div className="max-w-7xl mx-auto px-6 pt-6 flex justify-end">
+           <button onClick={fetchHistory} className="flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md border border-slate-200 rounded-full text-sm font-bold text-slate-700 shadow-sm hover:bg-white transition-all">
+             <History className="h-4 w-4 text-violet-500" />
+             View History
+             {userPlan === "FREE" && <Lock className="h-3.5 w-3.5 text-slate-400 ml-1" />}
+           </button>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 py-12 lg:py-20">
         
           {!analyzed && !loading && (
             <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
@@ -201,13 +362,13 @@ export default function ResumeAnalyzerDashboard() {
               {remainingCredits !== null && (
                 <div className="flex justify-center mb-4">
                   <div className={`px-5 py-2 rounded-full flex items-center gap-2 border shadow-sm backdrop-blur-md transition-all ${
-                    remainingCredits > 0 
+                    remainingCredits > 0 || userPlan === "PRO"
                       ? "bg-emerald-50/80 border-emerald-100 text-emerald-700" 
                       : "bg-rose-50/80 border-rose-100 text-rose-700 animate-pulse"
                   }`}>
-                    <Award className={`h-4 w-4 ${remainingCredits > 0 ? "text-emerald-500" : "text-rose-500"}`} />
+                    {userPlan === "PRO" ? <Unlock className="h-4 w-4 text-emerald-500" /> : <Award className={`h-4 w-4 ${remainingCredits > 0 ? "text-emerald-500" : "text-rose-500"}`} />}
                     <span className="text-xs font-bold uppercase tracking-wider">
-                      {remainingCredits} Free Credits Left
+                      {userPlan === "PRO" ? "PRO PLAN: Unlimited Scans" : `${remainingCredits} ATS Credits Left`}
                     </span>
                   </div>
                 </div>
@@ -217,97 +378,107 @@ export default function ResumeAnalyzerDashboard() {
                 <div className="space-y-8">
                   <div className="space-y-4">
                     <div className="text-xs font-bold tracking-[0.25em] text-violet-500 uppercase opacity-80">
-                      RESUME CHECKER
+                      USER CV ANALYZER
                     </div>
                     <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
-                      Is your resume <br />
+                      Beat the ATS <br />
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
-                        good enough?
+                        get hired faster.
                       </span>
                     </h1>
                     <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
-                      A free and fast AI resume checker doing 16 crucial checks to ensure your resume
+                      A free and fast AI resume checker doing crucial checks to ensure your resume
                       is ready to perform and get you interview callbacks.
                     </p>
                   </div>
 
-                <section className="max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8">
-                  <div className="space-y-6">
-                    {!file ? (
-                      <label className="group block border-2 border-dashed border-violet-200 rounded-[2rem] p-12 text-center cursor-pointer hover:border-violet-400 hover:bg-violet-50/40 transition-all duration-300">
-                        <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 group-hover:scale-110 transition-transform">
-                          <Upload className="w-8 h-8" />
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-2">Drop your resume here or choose a file.</h3>
-                        <p className="text-sm text-slate-500 mb-8">PDF & DOCX only. Max 2MB file size.</p>
-                        <input type="file" className="hidden" onChange={(e) => setFile(e.target.files[0])} />
-                        <div className="flex flex-col items-center gap-4">
-                          <div className="inline-flex items-center justify-center rounded-2xl bg-violet-600 px-8 py-4 text-base font-bold text-white shadow-xl shadow-violet-200 hover:bg-violet-700 hover:-translate-y-0.5 transition-all active:scale-95">
-                            Upload Your Resume
+                  <section className="max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8">
+                    <div className="space-y-6">
+                      {!file ? (
+                        <label className="group block border-2 border-dashed border-violet-200 rounded-[2rem] p-12 text-center cursor-pointer hover:border-violet-400 hover:bg-violet-50/40 transition-all duration-300">
+                          <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 group-hover:scale-110 transition-transform">
+                            <Upload className="w-8 h-8" />
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                             <CheckCircle2 className="h-4 w-4 text-violet-400" />
-                             Privacy guaranteed
+                          <h3 className="text-xl font-bold text-slate-900 mb-2">Drop your resume here or choose a file.</h3>
+                          <p className="text-sm text-slate-500 mb-8">PDF & DOCX only. Max 2MB file size.</p>
+                          <input type="file" className="hidden" onChange={(e) => setFile(e.target.files[0])} />
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="inline-flex items-center justify-center rounded-2xl bg-violet-600 px-8 py-4 text-base font-bold text-white shadow-xl shadow-violet-200 hover:bg-violet-700 hover:-translate-y-0.5 transition-all active:scale-95">
+                              Upload Your Resume
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                               <CheckCircle2 className="h-4 w-4 text-violet-400" />
+                               Privacy guaranteed
+                            </div>
                           </div>
+                        </label>
+                      ) : (
+                        <div className="flex items-center gap-4 rounded-2xl border border-violet-200 bg-violet-50/60 px-4 py-3">
+                          <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                            <FileText className="h-5 w-5 text-violet-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-slate-800">Resume Uploaded</p>
+                            <p className="text-xs text-slate-500 truncate">{file.name}</p>
+                          </div>
+                          <button onClick={() => setFile(null)} className="text-xs text-rose-500 font-semibold underline">Change</button>
                         </div>
-                      </label>
-                    ) : (
-                      <div className="flex items-center gap-4 rounded-2xl border border-violet-200 bg-violet-50/60 px-4 py-3">
-                        <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                          <FileText className="h-5 w-5 text-violet-600" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-slate-800">Resume Uploaded</p>
-                          <p className="text-xs text-slate-500 truncate">{file.name}</p>
-                        </div>
-                        <button onClick={() => setFile(null)} className="text-xs text-rose-500 font-semibold underline">Change</button>
-                      </div>
-                    )}
+                      )}
 
-                    {file ? (
-                      <>
-                        <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">Choose Job Domain</label>
-                          <select
-                            value={jobDomain}
-                            onChange={(e) => setJobDomain(e.target.value)}
-                            className="w-full rounded-xl border border-violet-200 bg-white/90 px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
-                          >
-                            <option value="" disabled>Select a domain</option>
-                            {availableDomains.length > 0 ? (
-                              availableDomains.map((domain) => (
-                                <option key={domain} value={domain}>
-                                  {domain}
-                                </option>
-                              ))
-                            ) : (
-                              <option disabled>Loading domains...</option>
-                            )}
-                          </select>
-                        </div>
+                      {file && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Choose Job Domain</label>
+                            <select
+                              value={jobDomain}
+                              onChange={(e) => setJobDomain(e.target.value)}
+                              className="w-full rounded-xl border border-violet-200 bg-white/90 px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                            >
+                              <option value="" disabled>Select a domain</option>
+                              {availableDomains.length > 0 ? (
+                                availableDomains.map((domain) => (
+                                  <option key={domain} value={domain}>
+                                    {domain}
+                                  </option>
+                                ))
+                              ) : (
+                                <option disabled>Loading domains...</option>
+                              )}
+                            </select>
+                          </div>
 
-                        {remainingCredits === 0 ? (
-                          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-center">
-                            <p className="text-sm font-bold text-rose-700">You've used all your free credits!</p>
-                            <p className="text-xs text-rose-600 mt-1">Upgrade to Premium to continue analyzing resumes.</p>
-                            <button className="mt-4 w-full py-3 bg-violet-600 text-white rounded-xl font-bold hover:bg-violet-700 transition shadow-lg">
-                              View Pricing
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Paste Job Description (Optional)</label>
+                            <textarea
+                              value={jdText}
+                              onChange={(e) => setJdText(e.target.value)}
+                              placeholder="Paste the job description here for higher accuracy..."
+                              className="w-full h-32 rounded-xl border border-violet-200 bg-white/90 px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none placeholder:text-slate-400"
+                            />
+                          </div>
+
+                          {remainingCredits === 0 && userPlan !== "PRO" ? (
+                            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-center">
+                              <p className="text-sm font-bold text-rose-700">You've used all your free credits!</p>
+                              <p className="text-xs text-rose-600 mt-1">Upgrade to Premium to continue analyzing resumes.</p>
+                              <button onClick={() => setShowPricing(true)} className="mt-4 w-full py-3 bg-violet-600 text-white rounded-xl font-bold hover:bg-violet-700 transition shadow-lg">
+                                View Pricing
+                              </button>
+                            </div>
+                          ) : jobDomain ? (
+                            <button onClick={analyzeResume} className="w-full px-10 py-4 bg-violet-600 text-white rounded-2xl font-bold hover:bg-violet-700 transition">
+                              Analyze Now
                             </button>
-                          </div>
-                        ) : jobDomain ? (
-                          <button onClick={analyzeResume} className="w-full px-10 py-4 bg-violet-600 text-white rounded-2xl font-bold hover:bg-violet-700 transition">
-                            Analyze Now
-                          </button>
-                        ) : (
-                          <div className="text-center text-sm text-slate-500 font-semibold">
-                            Select a job domain to continue.
-                          </div>
-                        )}
-                      </>
-                    ) : null}
-                  </div>
-                </section>
-              </div>
+                          ) : (
+                            <div className="text-center text-sm text-slate-500 font-semibold">
+                              Select a job domain to continue.
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </section>
+                </div>
 
                 <div className="hidden lg:block">
                   <div className="relative group">
@@ -335,413 +506,351 @@ export default function ResumeAnalyzerDashboard() {
                 <h3 className="font-bold">Analysis Error</h3>
               </div>
               <p className="mt-2 text-sm">{error}</p>
-              <button onClick={() => setLoading(false)} className="mt-4 text-sm font-bold underline">Try Again</button>
+              <button onClick={() => {setError(null); setLoading(false)}} className="mt-4 text-sm font-bold underline">Try Again</button>
             </div>
           )}
 
-        {loading && (
-          <div className="py-12 lg:py-6">
-            <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] items-stretch animate-in fade-in duration-500">
-              <div className="rounded-[28px] bg-white/80 border border-slate-200 shadow-[0_25px_60px_-45px_rgba(15,23,42,0.35)] p-8 backdrop-blur">
-                <div className="text-center space-y-5">
-                  <p className="text-lg font-semibold text-slate-700">Your Score</p>
-                  <div className="relative mx-auto h-32 w-32">
-                    <div className="absolute inset-0 rounded-full border-[14px] border-slate-200"></div>
-                    <div className="absolute inset-0 rounded-full border-[14px] border-emerald-400 [clip-path:inset(0_0_50%_0)]"></div>
-                    <div className="absolute left-1/2 top-1/2 h-1 w-10 -translate-y-1/2 origin-left rotate-[-20deg] rounded-full bg-slate-400"></div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="mx-auto h-3 w-28 rounded-full bg-slate-200 shimmer"></div>
-                    <div className="mx-auto h-3 w-24 rounded-full bg-slate-200 shimmer"></div>
-                  </div>
-                </div>
-                <div className="my-8 h-px bg-slate-200"></div>
-                <div className="space-y-5 text-sm text-slate-500">
-                  {["Content", "Section", "ATS Essentials", "Tailoring"].map((label) => (
-                    <div key={label} className="flex items-center justify-between">
-                      <span className="uppercase tracking-[0.12em] font-semibold text-xs">{label}</span>
-                      <span className="h-3 w-12 rounded-full bg-slate-200 shimmer"></span>
+          {loading && (
+            <div className="py-12 lg:py-6">
+              <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] items-stretch animate-in fade-in duration-500">
+                <div className="rounded-[28px] bg-white/80 border border-slate-200 shadow-[0_25px_60px_-45px_rgba(15,23,42,0.35)] p-8 backdrop-blur">
+                  <div className="text-center space-y-5">
+                    <p className="text-lg font-semibold text-slate-700">Calculating Score</p>
+                    <div className="relative mx-auto h-32 w-32">
+                      <div className="absolute inset-0 rounded-full border-[14px] border-slate-200"></div>
+                      <div className="absolute inset-0 rounded-full border-[14px] border-emerald-400 [clip-path:inset(0_0_50%_0)]"></div>
+                      <div className="absolute left-1/2 top-1/2 h-1 w-10 -translate-y-1/2 origin-left rotate-[-20deg] rounded-full bg-slate-400"></div>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-8 h-10 w-full rounded-xl bg-slate-200 shimmer"></div>
-              </div>
-
-              <div className="rounded-[28px] bg-[#e8edf7] border border-white/70 shadow-[0_35px_70px_-55px_rgba(15,23,42,0.35)] p-8">
-                <div className="space-y-7 text-slate-700">
-                  {analysisSteps.map((text, index) => (
-                    <div key={text} className="flex items-start gap-4">
-                      <div
-                        className={`mt-1 h-8 w-8 rounded-full border-2 flex items-center justify-center ${
-                          index < activeStep
-                            ? "bg-violet-500 border-violet-500 text-white"
-                            : index === activeStep
-                              ? "border-violet-400 text-violet-500 analysis-dot"
-                              : "border-slate-300 text-slate-400"
-                        }`}
-                      >
-                        {index < activeStep ? (
-                          <CheckCircle2 className="h-4 w-4" />
-                        ) : (
-                          <span className="text-sm font-bold">o</span>
-                        )}
+                    <div className="space-y-3">
+                      <div className="mx-auto h-3 w-28 rounded-full bg-slate-200 shimmer"></div>
+                      <div className="mx-auto h-3 w-24 rounded-full bg-slate-200 shimmer"></div>
+                    </div>
+                  </div>
+                  <div className="my-8 h-px bg-slate-200"></div>
+                  <div className="space-y-5 text-sm text-slate-500">
+                    {["Content", "Section", "ATS Essentials", "Tailoring"].map((label) => (
+                      <div key={label} className="flex items-center justify-between">
+                        <span className="uppercase tracking-[0.12em] font-semibold text-xs">{label}</span>
+                        <span className="h-3 w-12 rounded-full bg-slate-200 shimmer"></span>
                       </div>
-                      <div className="flex-1">
-                        <p
-                          className={`text-lg font-semibold ${
-                            index === activeStep ? "analysis-step text-slate-900" : "text-slate-600"
+                    ))}
+                  </div>
+                  <div className="mt-8 h-10 w-full rounded-xl bg-slate-200 shimmer"></div>
+                </div>
+
+                <div className="rounded-[28px] bg-[#e8edf7] border border-white/70 shadow-[0_35px_70px_-55px_rgba(15,23,42,0.35)] p-8">
+                  <div className="space-y-7 text-slate-700">
+                    {analysisSteps.map((text, index) => (
+                      <div key={text} className="flex items-start gap-4">
+                        <div
+                          className={`mt-1 h-8 w-8 rounded-full border-2 flex items-center justify-center ${
+                            index < activeStep
+                              ? "bg-violet-500 border-violet-500 text-white"
+                              : index === activeStep
+                                ? "border-violet-400 text-violet-500 analysis-dot"
+                                : "border-slate-300 text-slate-400"
                           }`}
                         >
-                          {text}
-                        </p>
-                        {index === 1 && <div className="mt-6 h-px bg-white/70"></div>}
+                          {index < activeStep ? (
+                            <CheckCircle2 className="h-4 w-4" />
+                          ) : (
+                            <span className="text-sm font-bold">o</span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p
+                            className={`text-lg font-semibold ${
+                              index === activeStep ? "analysis-step text-slate-900" : "text-slate-600"
+                            }`}
+                          >
+                            {text}
+                          </p>
+                          {index === 1 && <div className="mt-6 h-px bg-white/70"></div>}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-6 h-2 w-full rounded-full bg-white/70 overflow-hidden">
-                  <div className="h-full w-1/3 rounded-full bg-violet-400/70 progress-bar"></div>
+                    ))}
+                  </div>
+                  <div className="mt-6 h-2 w-full rounded-full bg-white/70 overflow-hidden">
+                    <div className="h-full w-1/3 rounded-full bg-violet-400/70 progress-bar"></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {analyzed && !loading && (
-          <div className="animate-in fade-in duration-700">
-            <div className="grid gap-6 lg:grid-cols-[0.9fr_1.7fr]">
-              <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.4)] p-6 sm:p-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 text-slate-600">
-                    <div className="h-10 w-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">R</div>
-                    <span className="text-lg font-semibold">ResumeIQ</span>
-                  </div>
+          {analyzed && !loading && analysisResult && (
+            <div className="animate-in fade-in duration-700">
+              {/* Premium Warning Banner */}
+              {analysisResult.subscriptionWarning && (
+                <div className="mb-8 flex items-center justify-between p-5 rounded-2xl bg-amber-50 border border-amber-200 shadow-sm">
                   <div className="flex items-center gap-3">
-                    {remainingCredits !== null && (
-                      <div className="px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100 text-violet-600 font-bold text-[10px] uppercase tracking-wider shadow-sm">
-                        {remainingCredits} Credits Left
-                      </div>
-                    )}
-                    <button 
-                      onClick={() => {
-                        setAnalyzed(false);
-                        setAnalysisResult(null);
-                        setFile(null);
-                        setJobDomain("");
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all font-bold text-xs border border-violet-100 shadow-sm"
-                    >
-                      <Upload className="h-3.5 w-3.5" />
-                      New Analysis
-                    </button>
+                    <Lock className="h-5 w-5 text-amber-500" />
+                    <p className="text-sm font-bold text-amber-800">{analysisResult.subscriptionWarning}</p>
                   </div>
+                  <button onClick={() => setShowPricing(true)} className="px-5 py-2 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-600 transition shadow-sm">
+                    Unlock Pro Features
+                  </button>
                 </div>
+              )}
 
-                <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="text-center">
-                    <p className="text-base font-semibold text-slate-700">Optimization Report</p>
-                    <div className="relative mx-auto mt-6 h-28 w-56">
-                      <svg viewBox="0 0 120 60" className="h-full w-full">
-                        <path d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="#e2e8f0" strokeWidth="12" strokeLinecap="round" />
-                        <path
-                          d="M10 60 A50 50 0 0 1 110 60"
-                          fill="none"
-                          stroke="#22c55e"
-                          strokeWidth="12"
-                          strokeLinecap="round"
-                          strokeDasharray={`${halfCircumference} ${halfCircumference}`}
-                          strokeDashoffset={gaugeOffset}
-                        />
-                      </svg>
-                      <div className="absolute left-1/2 top-[52%] h-1 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-500"></div>
+              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.7fr]">
+                {/* LEFT COLUMN: GAUGE & OVERVIEW */}
+                <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.4)] p-6 sm:p-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-slate-600">
+                      <div className="h-10 w-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">R</div>
+                      <span className="text-lg font-semibold">ResumeIQ</span>
                     </div>
-                    <div className="mt-2 text-2xl font-extrabold text-emerald-600">{score}/100</div>
-                    <p className="text-sm text-slate-500">{reportRows.filter((r) => r.tone !== "good").length} Issues</p>
-                    <p className="text-xs text-slate-500 mt-1">15 Areas for Review</p>
-                  </div>
-                </div>
-
-                <div className="mt-6 space-y-5">
-                  <div>
-                    <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      <span>Content</span>
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-600">90%</span>
-                    </div>
-                    <div className="mt-4 space-y-3">
-                      {contentChecks.map((item, index) => {
-                        const isOpen = openContentRow === index;
-                        return (
-                          <div key={item.label} className="rounded-2xl border border-transparent bg-white/60 px-3 py-2">
-                            <button
-                              type="button"
-                              onClick={() => toggleContentRow(index)}
-                              className="flex w-full items-center justify-between text-sm text-slate-600"
-                            >
-                              <div className="flex items-center gap-2">
-                                {item.status === "good" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-                                {item.status === "noraml" && <AlertCircle className="h-4 w-4 text-amber-500" />}
-                                {item.status === "bad" && <XCircle className="h-4 w-4 text-rose-500" />}
-                                <span>{item.label}</span>
-                              </div>
-                              <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                            </button>
-                            {isOpen && <p className="mt-2 text-xs text-slate-500">{item.detail}</p>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {scoreBuckets.map((bucket) => (
-                    <div key={bucket.label} className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                      <span>{bucket.label}</span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 ${
-                          bucket.score >= 85
-                            ? "bg-emerald-50 text-emerald-600"
-                            : bucket.score >= 70
-                              ? "bg-amber-50 text-amber-600"
-                              : "bg-rose-50 text-rose-600"
-                        }`}
+                    <div className="flex items-center gap-3">
+                      {remainingCredits !== null && (
+                        <div className="px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100 text-violet-600 font-bold text-[10px] uppercase tracking-wider shadow-sm">
+                          {userPlan === "PRO" ? "PRO" : `${remainingCredits} Credits Left`}
+                        </div>
+                      )}
+                      <button 
+                        onClick={() => {
+                          setAnalyzed(false);
+                          setAnalysisResult(null);
+                          setFile(null);
+                          setJobDomain("");
+                          setJdText("");
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all font-bold text-xs border border-violet-100 shadow-sm"
                       >
-                        {bucket.score}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <button 
-                  onClick={() => setShowFullReport(!showFullReport)}
-                  className="mt-8 w-full rounded-2xl bg-slate-900 text-white font-semibold py-3 hover:bg-slate-800 transition"
-                >
-                  {showFullReport ? "Hide Detailed Report" : "View Detailed Report"}
-                </button>
-
-                <button 
-                  onClick={() => {
-                    setAnalyzed(false);
-                    setAnalysisResult(null);
-                    setFile(null);
-                    setJobDomain("");
-                  }}
-                  className="mt-4 w-full rounded-2xl border-2 border-slate-200 bg-white text-slate-600 font-bold py-3 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2"
-                >
-                  <Upload className="h-4 w-4" />
-                  Analyze Another Resume
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                {/* Dynamic Professional Summary */}
-                {analysisResult?.professionalSummary && (
-                  <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-sm p-6 sm:p-8">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="h-10 w-10 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center">
-                        <UserIcon className="h-5 w-5" />
-                      </div>
-                      <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Professional Summary</p>
-                    </div>
-                    <p className="text-sm text-slate-600 leading-relaxed italic">
-                      "{analysisResult.professionalSummary}"
-                    </p>
-                  </div>
-                )}
-                <div className="rounded-[28px] bg-[#e8edf7] border border-white/70 shadow-[0_35px_80px_-55px_rgba(15,23,42,0.35)] p-6 sm:p-8">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                        <LayoutGrid className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Content Breakdown</p>
-                        <p className="text-sm text-slate-600">Keyword Density</p>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">9 Issues Found</span>
-                  </div>
-
-                  <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-                    <div className="flex items-center justify-between text-sm font-semibold text-slate-700">
-                      <span>Keyword Density</span>
-                      <ChevronDown className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <div className="mt-4 h-3 rounded-full bg-slate-200 overflow-hidden">
-                      <div className="h-full w-[68%] rounded-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-400"></div>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-                      <span>Missing: SEO Strategist Terms</span>
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-600 font-semibold">Optimal</span>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-3 text-xs font-semibold">
-                      <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">Missing: SEO Strategist Terms</span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">Analyze Data</span>
+                        <Upload className="h-3.5 w-3.5" />
+                        New Analysis
+                      </button>
                     </div>
                   </div>
-                </div>
 
-                <div className="rounded-[28px] bg-[#e8edf7] border border-white/70 shadow-[0_35px_80px_-55px_rgba(15,23,42,0.35)] p-6 sm:p-8">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                        <BarChart3 className="h-5 w-5" />
-                      </div>
-                      <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Readability Score</p>
-                    </div>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">9 Issues Found</span>
-                  </div>
-
-                  <div className="mt-6 grid gap-5 sm:grid-cols-[1.1fr_0.9fr]">
-                    <div className="rounded-2xl bg-white p-6 shadow-sm text-center">
-                      <div className="relative mx-auto h-24 w-24">
-                        <svg viewBox="0 0 120 120" className="h-full w-full">
-                          <circle cx="60" cy="60" r="46" fill="none" stroke="#e2e8f0" strokeWidth="10" />
-                          <circle
-                            cx="60"
-                            cy="60"
-                            r="46"
+                  <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="text-center">
+                      <p className="text-base font-semibold text-slate-700">Overall ATS Score</p>
+                      <div className="relative mx-auto mt-6 h-28 w-56">
+                        <svg viewBox="0 0 120 60" className="h-full w-full">
+                          <path d="M10 60 A50 50 0 0 1 110 60" fill="none" stroke="#e2e8f0" strokeWidth="12" strokeLinecap="round" />
+                          <path
+                            d="M10 60 A50 50 0 0 1 110 60"
                             fill="none"
-                            stroke="#f87171"
-                            strokeWidth="10"
+                            stroke={score >= 80 ? "#22c55e" : score >= 50 ? "#f59e0b" : "#ef4444"}
+                            strokeWidth="12"
                             strokeLinecap="round"
-                            strokeDasharray="289"
-                            strokeDashoffset="110"
+                            strokeDasharray={`${halfCircumference} ${halfCircumference}`}
+                            strokeDashoffset={gaugeOffset}
                           />
                         </svg>
-                        <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-slate-600">
-                          Good
-                        </div>
+                        <div className="absolute left-1/2 top-[52%] h-1 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-500"></div>
                       </div>
-                      <p className="mt-3 text-sm font-semibold text-slate-700">Project</p>
-                    </div>
-
-                    <div className="rounded-2xl bg-white p-6 shadow-sm">
-                      <p className="text-sm font-semibold text-slate-700">Action Verbs</p>
-                      <div className="mt-4 space-y-3">
-                        {actionVerbs.map((verb) => (
-                          <div key={verb.label} className="flex items-center justify-between text-sm text-slate-600">
-                            <div className="flex items-center gap-2">
-                              {verb.status === "good" ? (
-                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                              ) : (
-                                <XCircle className="h-4 w-4 text-rose-500" />
-                              )}
-                              <span>{verb.label}</span>
-                            </div>
-                            <div className={`h-5 w-5 rounded-full ${verb.status === "good" ? "bg-emerald-100" : "bg-rose-100"} flex items-center justify-center`}>
-                              {verb.status === "good" ? (
-                                <CheckCircle2 className={`h-3 w-3 ${verb.status === "good" ? "text-emerald-600" : "text-rose-600"}`} />
-                              ) : (
-                                <XCircle className="h-3 w-3 text-rose-600" />
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                      <div className={`mt-2 text-3xl font-extrabold ${score >= 80 ? "text-emerald-600" : score >= 50 ? "text-amber-600" : "text-rose-600"}`}>
+                        {score}<span className="text-lg opacity-50">/100</span>
                       </div>
+                      <p className="text-sm text-slate-500 mt-2">Overall Match Score</p>
                     </div>
                   </div>
+
+                  <div className="mt-6 space-y-5">
+                    <div>
+                      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        <span>Content</span>
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-600">Breakdown</span>
+                      </div>
+                      <div className="mt-4 space-y-3">
+                        {contentChecks.map((item, index) => {
+                          const isOpen = openContentRow === index;
+                          return (
+                            <div key={item.label} className="rounded-2xl border border-transparent bg-white/60 px-3 py-2">
+                              <button
+                                type="button"
+                                onClick={() => toggleContentRow(index)}
+                                className="flex w-full items-center justify-between text-sm text-slate-600"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {item.status === "good" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                                  {item.status === "warn" && <AlertCircle className="h-4 w-4 text-amber-500" />}
+                                  {item.status === "bad" && <XCircle className="h-4 w-4 text-rose-500" />}
+                                  <span>{item.label}</span>
+                                </div>
+                                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                              </button>
+                              {isOpen && <p className="mt-2 text-xs text-slate-500 font-medium">{item.detail}</p>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {scoreBuckets.map((bucket) => (
+                      <div key={bucket.label} className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                        <span>{bucket.label}</span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 ${
+                            bucket.score >= 85
+                              ? "bg-emerald-50 text-emerald-600"
+                              : bucket.score >= 60
+                                ? "bg-amber-50 text-amber-600"
+                                : "bg-rose-50 text-rose-600"
+                          }`}
+                        >
+                          {bucket.score}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* DYNAMIC DOWNLOAD BUTTON */}
+                  <button 
+                    onClick={handleDownloadPdf}
+                    className={`mt-8 w-full rounded-2xl font-semibold py-4 flex items-center justify-center gap-2 transition-all shadow-sm ${
+                      userPlan === "PRO" 
+                        ? "bg-slate-900 text-white hover:bg-slate-800" 
+                        : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
+                    }`}
+                  >
+                    {userPlan === "PRO" ? (
+                      <><Download className="h-5 w-5" /> Download Optimized Resume</>
+                    ) : (
+                      <><Lock className="h-4 w-4" /> Download Report (Pro Only)</>
+                    )}
+                  </button>
                 </div>
 
-                <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.35)] p-6 sm:p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Extracted Details</p>
+                {/* RIGHT COLUMN: AI INSIGHTS & KEYWORDS */}
+                <div className="space-y-6">
+                  
+                  {/* Readability & Action Verbs */}
+                  <div className="rounded-[28px] bg-[#e8edf7] border border-white/70 shadow-[0_35px_80px_-55px_rgba(15,23,42,0.35)] p-6 sm:p-8">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                          <BarChart3 className="h-5 w-5" />
+                        </div>
+                        <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Readability Score</p>
+                      </div>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">AI Verification</span>
+                    </div>
+
+                    <div className="mt-6 grid gap-5 sm:grid-cols-[1.1fr_0.9fr]">
+                      <div className="rounded-2xl bg-white p-6 shadow-sm text-center flex flex-col justify-center">
+                        <div className="relative mx-auto h-24 w-24">
+                          <svg viewBox="0 0 120 120" className="h-full w-full">
+                            <circle cx="60" cy="60" r="46" fill="none" stroke="#e2e8f0" strokeWidth="10" />
+                            <circle cx="60" cy="60" r="46" fill="none" stroke="#22c55e" strokeWidth="10" strokeLinecap="round" strokeDasharray="289" strokeDashoffset="40" />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-600">
+                            Optimal
+                          </div>
+                        </div>
+                        <p className="mt-3 text-sm font-semibold text-slate-700">Scan Readability</p>
+                      </div>
+
+                      <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <p className="text-sm font-semibold text-slate-700">Action Verbs Used</p>
+                        <div className="mt-4 space-y-3">
+                          {actionVerbs.map((verb) => (
+                            <div key={verb.label} className="flex items-center justify-between text-sm text-slate-600">
+                              <div className="flex items-center gap-2">
+                                {verb.status === "good" ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-rose-500" />}
+                                <span>{verb.label}</span>
+                              </div>
+                              <div className={`h-5 w-5 rounded-full ${verb.status === "good" ? "bg-emerald-100" : "bg-rose-100"} flex items-center justify-center`}>
+                                {verb.status === "good" ? <CheckCircle2 className="h-3 w-3 text-emerald-600" /> : <XCircle className="h-3 w-3 text-rose-600" />}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-8">
-                    {/* Experience Section */}
-                    {analysisResult?.experience?.length > 0 && (
-                      <div className="space-y-4">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
-                          <Briefcase className="h-4 w-4 text-violet-500" /> Work Experience
-                        </h4>
-                        <div className="grid gap-4">
-                          {analysisResult.experience.map((exp, i) => (
-                            <div key={i} className="p-4 rounded-2xl bg-slate-50/50 border border-slate-100">
-                              <div className="flex justify-between items-start">
-                                <h5 className="font-bold text-slate-900">{exp.jobTitle}</h5>
-                                <span className="text-[10px] font-bold bg-white px-2 py-1 rounded-full text-slate-500 shadow-sm border border-slate-50">
-                                  {exp.startDate} - {exp.isCurrent ? "Present" : exp.endDate}
-                                </span>
-                              </div>
-                              <p className="text-xs font-semibold text-violet-600 mt-0.5">{exp.company}</p>
-                              <p className="text-xs text-slate-500 mt-2 leading-relaxed line-clamp-2">{exp.description}</p>
-                            </div>
-                          ))}
-                        </div>
+                  <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.35)] p-6 sm:p-8">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">ATS Keyword Analysis</p>
                       </div>
-                    )}
+                    </div>
 
-                    {/* Education Section */}
-                    {analysisResult?.education?.length > 0 && (
+                    <div className="space-y-8">
+                      {/* Matched Keywords */}
                       <div className="space-y-4">
                         <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
-                          <GraduationCap className="h-4 w-4 text-indigo-500" /> Education
+                          <Target className="h-4 w-4 text-emerald-500" /> Matched JD Keywords
                         </h4>
-                        <div className="grid gap-4 md:grid-cols-2">
-                          {analysisResult.education.map((edu, i) => (
-                            <div key={i} className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
-                              <h5 className="font-bold text-slate-900 text-sm">{edu.degree}</h5>
-                              <p className="text-xs font-semibold text-indigo-600 mt-0.5">{edu.institution}</p>
-                              <div className="flex items-center justify-between mt-3">
-                                <span className="text-[10px] text-slate-500">{edu.fieldOfStudy}</span>
-                                {edu.gpa && <span className="text-[10px] font-bold text-emerald-600">GPA: {edu.gpa}</span>}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                        {analysisResult.matchedKeywords?.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {analysisResult.matchedKeywords.map((kw, i) => (
+                              <span key={i} className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 font-semibold text-xs border border-emerald-100 shadow-sm">
+                                ✓ {kw}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-500">No matching keywords found. Tailor your resume heavily.</p>
+                        )}
                       </div>
-                    )}
 
-                    {/* Projects Section */}
-                    {analysisResult?.projects?.length > 0 && (
+                      {/* Missing Keywords (Gated Feature) */}
                       <div className="space-y-4">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
-                          <Award className="h-4 w-4 text-emerald-500" /> Projects
+                        <h4 className="flex items-center justify-between text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-rose-500" /> Missing Keywords
+                          </div>
+                          {!analysisResult.missingKeywords && <Lock className="h-4 w-4 text-slate-400" />}
                         </h4>
-                        <div className="grid gap-4">
-                          {analysisResult.projects.map((proj, i) => (
-                            <div key={i} className="p-4 rounded-2xl bg-emerald-50/30 border border-emerald-100/50">
-                              <div className="flex justify-between items-start">
-                                <h5 className="font-bold text-slate-900">{proj.title}</h5>
-                                {proj.url && (
-                                  <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 transition">
-                                    <Link className="h-3.5 w-3.5" />
-                                  </a>
-                                )}
-                              </div>
-                              <p className="text-[10px] font-bold text-emerald-700/70 mt-1 uppercase tracking-wider">{proj.tools}</p>
-                              <p className="text-xs text-slate-600 mt-2 leading-relaxed">{proj.description}</p>
-                            </div>
-                          ))}
-                        </div>
+                        
+                        {analysisResult.missingKeywords ? (
+                          <div className="flex flex-wrap gap-2">
+                            {analysisResult.missingKeywords.length > 0 ? analysisResult.missingKeywords.map((kw, i) => (
+                              <span key={i} className="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 font-semibold text-xs border border-rose-100 shadow-sm">
+                                ✕ {kw}
+                              </span>
+                            )) : <span className="text-sm text-emerald-600 font-bold">Great job! No major keywords missing.</span>}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            <Lock className="h-8 w-8 mx-auto text-slate-300 mb-2" />
+                            <p className="text-sm font-semibold text-slate-600">Missing Keyword Analysis is locked</p>
+                            <p className="text-xs text-slate-400 mt-1">Available on Starter & Pro plans</p>
+                          </div>
+                        )}
                       </div>
-                    )}
 
-                    {/* Skills Section */}
-                    {analysisResult?.extractedSkills?.length > 0 && (
+                      {/* AI Suggestions (Gated Feature) */}
                       <div className="space-y-4">
-                        <h4 className="flex items-center gap-2 text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
-                          <CheckCircle2 className="h-4 w-4 text-amber-500" /> Extracted Skills
+                        <h4 className="flex items-center justify-between text-sm font-bold text-indigo-900 border-b border-indigo-100 pb-2">
+                          <div className="flex items-center gap-2">
+                            <Lightbulb className="h-4 w-4 text-indigo-500" /> AI Suggestions
+                          </div>
+                          {!analysisResult.suggestions && <Lock className="h-4 w-4 text-indigo-300" />}
                         </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {analysisResult.extractedSkills.map((skill, i) => (
-                            <span key={i} className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-[11px] font-bold text-slate-600 shadow-sm">
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
+                        
+                        {analysisResult.suggestions ? (
+                          <ul className="space-y-3">
+                            {analysisResult.suggestions.map((suggestion, i) => (
+                              <li key={i} className="flex gap-3 text-sm text-indigo-800 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 shadow-sm">
+                                <span className="font-bold text-indigo-500 mt-0.5">•</span>
+                                {suggestion}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                           <div className="text-center py-6 bg-white/50 rounded-xl">
+                            <p className="text-sm font-semibold text-indigo-600">Actionable AI Suggestions are locked</p>
+                            <button onClick={() => setShowPricing(true)} className="mt-3 px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition">
+                              Upgrade to Unlock
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </div>
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-18px); }
@@ -796,38 +905,6 @@ export default function ResumeAnalyzerDashboard() {
         }
         .content-item {
           animation: contentItem 0.45s ease forwards;
-        }
-        @keyframes fillBar {
-          0% { transform: scaleX(0); }
-          100% { transform: scaleX(1); }
-        }
-        .score-bar {
-          transform-origin: left;
-          animation: fillBar 0.9s ease forwards;
-        }
-
-        @keyframes contentItem {
-          0% { opacity: 0; transform: translateY(6px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .content-item {
-          animation: contentItem 0.45s ease forwards;
-        }
-        @keyframes detailCard {
-          0% { opacity: 0; transform: translateY(10px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .detail-card {
-          animation: detailCard 0.5s ease forwards;
-        }
-        @keyframes fillBar {
-          0% { transform: scaleX(0); }
-          100% { transform: scaleX(1); }
-        }
-        .detail-bar {
-          transform-origin: left;
-          background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
-          animation: fillBar 0.9s ease forwards;
         }
       `}</style>
     </main>
