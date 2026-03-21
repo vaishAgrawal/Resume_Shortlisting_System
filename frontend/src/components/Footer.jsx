@@ -41,7 +41,7 @@ export default function Footer() {
           </h3>
           <ul className="space-y-2 text-base text-gray-400 font-medium">
             <li><a href="/" className="hover:text-purple-400 transition-all">Home</a></li>
-            <li><a href="/recruiter" className="hover:text-purple-400 transition-all">Recruiter Dashboard</a></li>
+            <li><a href="/recruiter" className="hover:text-purple-400 transition-all">Dashboard</a></li>
             <li><a href="/dashboard" className="hover:text-purple-400 transition-all">Analytics</a></li>
           </ul>
         </div>

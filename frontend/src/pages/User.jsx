@@ -197,22 +197,6 @@ export default function ResumeAnalyzerDashboard() {
         
           {!analyzed && !loading && (
             <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
-              {/* Top Credit Badge - Centered */}
-              {remainingCredits !== null && (
-                <div className="flex justify-center mb-4">
-                  <div className={`px-5 py-2 rounded-full flex items-center gap-2 border shadow-sm backdrop-blur-md transition-all ${
-                    remainingCredits > 0 
-                      ? "bg-emerald-50/80 border-emerald-100 text-emerald-700" 
-                      : "bg-rose-50/80 border-rose-100 text-rose-700 animate-pulse"
-                  }`}>
-                    <Award className={`h-4 w-4 ${remainingCredits > 0 ? "text-emerald-500" : "text-rose-500"}`} />
-                    <span className="text-xs font-bold uppercase tracking-wider">
-                      {remainingCredits} Free Credits Left
-                    </span>
-                  </div>
-                </div>
-              )}
-
               <div className="grid lg:grid-cols-2 gap-16 items-center">
                 <div className="space-y-8">
                   <div className="space-y-4">
@@ -307,6 +291,21 @@ export default function ResumeAnalyzerDashboard() {
                     ) : null}
                   </div>
                 </section>
+
+                {remainingCredits !== null && (
+                  <div className="flex justify-center lg:justify-start">
+                    <div className={`px-5 py-2 rounded-full flex items-center gap-2 border shadow-sm backdrop-blur-md transition-all ${
+                      remainingCredits > 0 
+                        ? "bg-emerald-50/80 border-emerald-100 text-emerald-700" 
+                        : "bg-rose-50/80 border-rose-100 text-rose-700 animate-pulse"
+                    }`}>
+                      <Award className={`h-4 w-4 ${remainingCredits > 0 ? "text-emerald-500" : "text-rose-500"}`} />
+                      <span className="text-xs font-bold uppercase tracking-wider">
+                        {remainingCredits} Free Credits Left
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
                 <div className="hidden lg:block">
@@ -314,7 +313,7 @@ export default function ResumeAnalyzerDashboard() {
                     <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-tr from-violet-400/30 via-fuchsia-300/30 to-indigo-300/30 blur-3xl group-hover:opacity-100 transition-opacity duration-500"></div>
                     <div className="relative rounded-[2.5rem] bg-white/40 p-3 shadow-2xl backdrop-blur-2xl border border-white/50 overflow-hidden transform hover:scale-[1.02] transition-transform duration-500">
                       <img
-                        src="/images/resume_mockup.png"
+                        src="/images/resume.webp"
                         alt="Resume analysis preview"
                         className="w-full h-auto rounded-[2rem] shadow-sm transform group-hover:translate-y-[-5px] transition-transform duration-700"
                         onError={(e) => {
