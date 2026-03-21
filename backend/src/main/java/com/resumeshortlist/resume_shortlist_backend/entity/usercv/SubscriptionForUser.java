@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Data
 @Table(name = "subscription_for_user")
@@ -14,6 +16,7 @@ public class SubscriptionForUser {
 
     @OneToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private UserForCv user;
 
     @Enumerated(EnumType.STRING)

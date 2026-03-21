@@ -18,9 +18,9 @@ import {
   Lock,
   Unlock,
   Lightbulb,
-  History,     // NEW
-  Download,    // NEW
-  X            // NEW
+  History,
+  Download,
+  X
 } from "lucide-react";
 import api from "../api/axios";
 
@@ -44,7 +44,7 @@ export default function ResumeAnalyzerDashboard() {
   const [remainingCredits, setRemainingCredits] = useState(null);
   const [userPlan, setUserPlan] = useState("FREE");
   
-  // NEW: Feature States
+  // Feature States
   const [showPricing, setShowPricing] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -80,6 +80,7 @@ export default function ResumeAnalyzerDashboard() {
     { label: "Worked on", status: "bad" }
   ];
 
+  // Auth Email (Fallback for testing if localStorage is empty)
   const userEmail = localStorage.getItem("userEmail") || "candidate@test.com";
 
   useEffect(() => {
@@ -90,10 +91,7 @@ export default function ResumeAnalyzerDashboard() {
           "Data Analyst", "Product Manager", "UI/UX Designer"
         ]);
 
-        const creditRes = await api.get("/user-cv/credits", {
-          headers: { "user-email": userEmail }
-        });
-        
+        const creditRes = await api.get("/user-cv/credits");
         if (creditRes.status === 200) {
           setRemainingCredits(creditRes.data.atsCreditsRemaining);
           setUserPlan(creditRes.data.plan);
@@ -164,23 +162,20 @@ export default function ResumeAnalyzerDashboard() {
     setOpenContentRow((prev) => (prev === index ? null : index));
   };
 
-  // --- NEW: RAZORPAY PAYMENT LOGIC ---
+  // --- RAZORPAY PAYMENT LOGIC ---
   const handlePayment = async (planType, amount) => {
     try {
-      // 1. Create Order
       const orderRes = await api.post("/user-cv/create-order", { amount, planType });
       const orderData = JSON.parse(orderRes.data);
 
-      // 2. Configure Razorpay
       const options = {
-        key: "YOUR_RAZORPAY_KEY_ID", // TODO: Replace with your actual Test Key ID
+        key: "YOUR_RAZORPAY_KEY_ID", // Replace with your actual Test Key ID
         amount: orderData.amount,
         currency: "INR",
         name: "Graphura ATS",
         description: `Upgrade to ${planType} Plan`,
         order_id: orderData.id,
         handler: async function (response) {
-          // 3. Verify Payment
           try {
             await api.post("/user-cv/verify-payment", {
               razorpay_order_id: response.razorpay_order_id,
@@ -191,7 +186,6 @@ export default function ResumeAnalyzerDashboard() {
             alert("Payment Successful! Plan Upgraded.");
             setShowPricing(false);
             
-            // Refresh Data
             const creditRes = await api.get("/user-cv/credits");
             setUserPlan(creditRes.data.plan);
             setRemainingCredits(creditRes.data.atsCreditsRemaining);
@@ -199,7 +193,7 @@ export default function ResumeAnalyzerDashboard() {
             alert("Payment Verification Failed!");
           }
         },
-        theme: { color: "#7c3aed" } // Violet branding
+        theme: { color: "#7c3aed" } 
       };
 
       const rzp = new window.Razorpay(options);
@@ -209,7 +203,7 @@ export default function ResumeAnalyzerDashboard() {
     }
   };
 
-  // --- NEW: HISTORY LOGIC ---
+  // --- HISTORY LOGIC ---
   const fetchHistory = async () => {
     if (userPlan === "FREE") {
       setShowPricing(true);
@@ -224,14 +218,13 @@ export default function ResumeAnalyzerDashboard() {
     }
   };
 
-  // --- NEW: PDF DOWNLOAD LOGIC ---
+  // --- PDF DOWNLOAD LOGIC ---
   const handleDownloadPdf = async () => {
     if (userPlan !== "PRO") {
       setShowPricing(true);
       return;
     }
     try {
-      // Fetch history to get the latest analysis ID for download
       const historyRes = await api.get("/user-cv/history");
       if (historyRes.data.length === 0) {
         alert("No analysis found to download.");
@@ -326,7 +319,7 @@ export default function ResumeAnalyzerDashboard() {
                       Scanned on: {new Date(item.analyzedAt).toLocaleDateString()} at {new Date(item.analyzedAt).toLocaleTimeString()}
                     </div>
                   </div>
-                  <button onClick={() => alert("Loading past report... (Connect to specific ID)")} className="text-sm font-semibold text-violet-600 bg-violet-100 px-4 py-2 rounded-xl hover:bg-violet-200 transition">
+                  <button onClick={() => alert("Detailed view functionality coming soon...")} className="text-sm font-semibold text-violet-600 bg-violet-100 px-4 py-2 rounded-xl hover:bg-violet-200 transition">
                     View Details
                   </button>
                 </div>
@@ -358,7 +351,7 @@ export default function ResumeAnalyzerDashboard() {
         
           {!analyzed && !loading && (
             <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
-              {/* Top Credit Badge - Centered */}
+              {/* Top Credit Badge */}
               {remainingCredits !== null && (
                 <div className="flex justify-center mb-4">
                   <div className={`px-5 py-2 rounded-full flex items-center gap-2 border shadow-sm backdrop-blur-md transition-all ${
