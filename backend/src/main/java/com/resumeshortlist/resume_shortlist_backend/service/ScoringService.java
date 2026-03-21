@@ -5,18 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.resumeshortlist.resume_shortlist_backend.entity.*;
 import com.resumeshortlist.resume_shortlist_backend.repository.*;
-import com.resumeshortlist.resume_shortlist_backend.exception.ResourceNotFoundException;
 
 @Service
 public class ScoringService {
@@ -31,40 +27,16 @@ public class ScoringService {
     @Autowired private CertificationRepository certificationRepository;
     @Autowired private ProjectRepository projectRepository;
 
-    private boolean hasText(String str) {
-        return str != null && !str.trim().isEmpty();
-    }
-
+    private boolean hasText(String str) { return str != null && !str.trim().isEmpty(); }
 
     @Transactional
-    public void triggerScoring(Long jobId, List<Long> newCandidateIds) {
-        if (!jobPostingRepository.existsById(jobId)) {
-            throw new ResourceNotFoundException("Job ID " + jobId + " not found");
-        }
-        for (Long candId : newCandidateIds) {
-            try {
-                if (candidateRepository.existsById(candId)) {
-                    System.out.println("Processing Candidate ID: " + candId);
-                    calculateAndSaveScore(candId, jobId);
-                    System.out.println("✅ Success: Candidate ID " + candId);
-                }
-            } catch (Exception e) {
-                System.err.println("❌ Error processing Candidate ID " + candId + ": " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Async
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public CompletableFuture<Void> calculateAndSaveScore(Long candidateId, Long jobPostingId) {
+    public void calculateAndSaveScore(Long candidateId, Long jobPostingId) {
         Candidate candidate = candidateRepository.findById(candidateId).orElseThrow();
         JobPosting jobPosting = jobPostingRepository.findById(jobPostingId).orElseThrow();
 
         List<ScoreBreakdown> breakdowns = new ArrayList<>();
         int totalScore = 0;
 
-        // Fetch Data
         List<Education> educations = educationRepository.findByCandidateId(candidateId);
         List<WorkExperience> workEx = workExperienceRepository.findByCandidateId(candidateId);
         List<ExtractedSkill> skills = extractedSkillRepository.findByCandidateId(candidateId);
@@ -129,11 +101,11 @@ public class ScoringService {
         int expScore = 0;
         List<String> expTips = new ArrayList<>();
         if (!workEx.isEmpty()) {
-            expScore += 5; // Has experience
+            expScore += 5;
             if (workEx.stream().anyMatch(w -> w.getDescription() != null && w.getDescription().length() > 50)) expScore += 5;
             else expTips.add("Expand job descriptions.");
             
-            if (workEx.stream().anyMatch(w -> w.getDescription() != null && w.getDescription().matches(".*\\d+.*"))) expScore += 10; // Numbers/Metrics
+            if (workEx.stream().anyMatch(w -> w.getDescription() != null && w.getDescription().matches(".*\\d+.*"))) expScore += 10;
             else expTips.add("Add quantified achievements (numbers/%) to boost score.");
         } else {
             expTips.add("No work experience found.");
@@ -161,7 +133,7 @@ public class ScoringService {
         breakdowns.add(new ScoreBreakdown("Certifications", certScore, 5, certScore == 0 ? "Add certifications." : "Verified."));
 
         // --- 9. Extras (5 pts) ---
-        totalScore += 5; // Baseline for grammar/tone
+        totalScore += 5;
         breakdowns.add(new ScoreBreakdown("Tone/Grammar", 5, 5, "Professional tone check."));
 
         // --- SAVE ---
@@ -175,7 +147,6 @@ public class ScoringService {
         scoreEntity.setStatus(status);
         scoreEntity.setScoredAt(LocalDateTime.now());
 
-        // Manage Breakdowns
         if(scoreEntity.getScoreBreakdowns() == null) scoreEntity.setScoreBreakdowns(new ArrayList<>());
         scoreEntity.getScoreBreakdowns().clear();
         
@@ -185,6 +156,5 @@ public class ScoringService {
         }
 
         candidateScoreRepository.save(scoreEntity);
-        return CompletableFuture.completedFuture(null);
     }
 }
