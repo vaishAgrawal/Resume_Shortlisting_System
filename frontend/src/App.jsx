@@ -14,6 +14,7 @@ import Privacy from "./pages/Privacy.jsx";
 import Signup from "./pages/Signup.jsx";
 import Login from "./pages/Login.jsx";
 import ProfilePage from "./pages/U_profile.jsx";
+import RecruiterProfile from "./pages/R_profile.jsx";
 
 function ProtectedRoute({ children, allowedRole }) {
   const token = localStorage.getItem("jwtToken");
@@ -23,6 +24,13 @@ function ProtectedRoute({ children, allowedRole }) {
   if (allowedRole && role !== allowedRole) return <Navigate to="/" />;
   
   return children;
+}
+
+function RoleBasedProfile() {
+  const token = localStorage.getItem("jwtToken");
+  const role = (localStorage.getItem("role") || "").toUpperCase();
+  if (!token) return <Navigate to="/login" />;
+  return role === "RECRUITER" ? <RecruiterProfile /> : <ProfilePage />;
 }
 
 
@@ -63,7 +71,7 @@ export default function App() {
           }/>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/recruiter-dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={<RoleBasedProfile />} />
           <Route path="/user-dashboard" element={
             <ProtectedRoute allowedRole="USER">
               <UserDashboard />
@@ -74,9 +82,7 @@ export default function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/profile" element={
-            <ProtectedRoute><ProfilePage /></ProtectedRoute>
-          } />
+          
         </Routes>
       </main>
       {!hideChrome && <Footer />}

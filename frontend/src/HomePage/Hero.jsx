@@ -4,8 +4,9 @@ export default function Hero() {
       localStorage.getItem("role") ||
       localStorage.getItem("userId")
   );
+  const role = (localStorage.getItem("role") || "").toUpperCase();
   const dashboardHref = isAuthed
-    ? localStorage.getItem("role") === "recruiter"
+    ? role === "RECRUITER"
       ? "/recruiter"
       : "/user-dashboard"
     : "/login";

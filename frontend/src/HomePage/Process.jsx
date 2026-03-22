@@ -18,7 +18,7 @@ export default function Process() {
             {
               step: 1,
               title: "Sign Up / SSO",
-              desc: "Quick registration with Email, Google, or Microsoft authentication.",
+              desc: "Quick registration with Email",
               icon: "fa-user-plus"
             },
             {
@@ -41,7 +41,7 @@ export default function Process() {
             },
             {
               step: 5,
-              title: "Filter, Export & Save",
+              title: "Anaylze, Match & Improve",
               desc: "Apply filters, export selected rows and columns, and access saved history.",
               icon: "fa-filter"
             }

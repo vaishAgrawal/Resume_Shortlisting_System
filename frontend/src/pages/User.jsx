@@ -338,53 +338,30 @@ export default function ResumeAnalyzerDashboard() {
         <div className="pointer-events-none absolute -top-32 left-0 h-96 w-96 rounded-full bg-violet-200/45 blur-[120px]"></div>
         <div className="pointer-events-none absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-indigo-300/40 blur-[140px]"></div>
         
-        {/* TOP NAVIGATION UTILITY BAR */}
-        <div className="max-w-7xl mx-auto px-6 pt-6 flex justify-end">
-           <button onClick={fetchHistory} className="flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md border border-slate-200 rounded-full text-sm font-bold text-slate-700 shadow-sm hover:bg-white transition-all">
-             <History className="h-4 w-4 text-violet-500" />
-             View History
-             {userPlan === "FREE" && <Lock className="h-3.5 w-3.5 text-slate-400 ml-1" />}
-           </button>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-6 py-12 lg:py-20">
+        <div className="max-w-7xl mx-auto px-6 pt-28 pb-12 lg:pt-32 lg:pb-20">
         
           {!analyzed && !loading && (
             <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
-              {/* Top Credit Badge */}
-              {remainingCredits !== null && (
-                <div className="flex justify-center mb-4">
-                  <div className={`px-5 py-2 rounded-full flex items-center gap-2 border shadow-sm backdrop-blur-md transition-all ${
-                    remainingCredits > 0 || userPlan === "PRO"
-                      ? "bg-emerald-50/80 border-emerald-100 text-emerald-700" 
-                      : "bg-rose-50/80 border-rose-100 text-rose-700 animate-pulse"
-                  }`}>
-                    {userPlan === "PRO" ? <Unlock className="h-4 w-4 text-emerald-500" /> : <Award className={`h-4 w-4 ${remainingCredits > 0 ? "text-emerald-500" : "text-rose-500"}`} />}
-                    <span className="text-xs font-bold uppercase tracking-wider">
-                      {userPlan === "PRO" ? "PRO PLAN: Unlimited Scans" : `${remainingCredits} ATS Credits Left`}
+              <div className="space-y-10">
+                <div className="space-y-4 text-center">
+                  <div className="text-xs font-bold tracking-[0.25em] text-violet-500 uppercase opacity-80">
+                    USER CV ANALYZER
+                  </div>
+                  <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
+                    Beat the ATS <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
+                      get hired faster.
                     </span>
-                  </div>
+                  </h1>
+                  <p className="text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
+                    A free and fast AI resume checker doing crucial checks to ensure your resume
+                    is ready to perform and get you interview callbacks.
+                  </p>
                 </div>
-              )}
-              <div className="grid lg:grid-cols-2 gap-16 items-center">
-                <div className="space-y-8">
-                  <div className="space-y-4">
-                    <div className="text-xs font-bold tracking-[0.25em] text-violet-500 uppercase opacity-80">
-                      USER CV ANALYZER
-                    </div>
-                    <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
-                      Beat the ATS <br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
-                        get hired faster.
-                      </span>
-                    </h1>
-                    <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
-                      A free and fast AI resume checker doing crucial checks to ensure your resume
-                      is ready to perform and get you interview callbacks.
-                    </p>
-                  </div>
 
-                  <section className="max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8">
+                <div className="grid lg:grid-cols-2 gap-16 items-start">
+                  <div className="space-y-8 flex flex-col items-center">
+                  <section className="w-full max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8">
                     <div className="space-y-6">
                       {!file ? (
                         <label className="group block border-2 border-dashed border-violet-200 rounded-[2rem] p-12 text-center cursor-pointer hover:border-violet-400 hover:bg-violet-50/40 transition-all duration-300">
@@ -470,9 +447,25 @@ export default function ResumeAnalyzerDashboard() {
                       )}
                     </div>
                   </section>
+
+                  {remainingCredits !== null && (
+                    <div className="flex justify-center lg:justify-start">
+                      <div className={`px-5 py-2 rounded-full flex items-center gap-2 border shadow-sm backdrop-blur-md transition-all ${
+                        remainingCredits > 0 || userPlan === "PRO"
+                          ? "bg-emerald-50/80 border-emerald-100 text-emerald-700"
+                          : "bg-rose-50/80 border-rose-100 text-rose-700 animate-pulse"
+                      }`}>
+                        {userPlan === "PRO" ? <Unlock className="h-4 w-4 text-emerald-500" /> : <Award className={`h-4 w-4 ${remainingCredits > 0 ? "text-emerald-500" : "text-rose-500"}`} />}
+                        <span className="text-xs font-bold uppercase tracking-wider">
+                          {userPlan === "PRO" ? "PRO PLAN: Unlimited Scans" : `${remainingCredits} ATS Credits Left`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
 
-                <div className="hidden lg:block">
+                <div className="hidden lg:block self-start">
                   <div className="relative group">
                     <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-tr from-violet-400/30 via-fuchsia-300/30 to-indigo-300/30 blur-3xl group-hover:opacity-100 transition-opacity duration-500"></div>
                     <div className="relative rounded-[2.5rem] bg-white/40 p-3 shadow-2xl backdrop-blur-2xl border border-white/50 overflow-hidden transform hover:scale-[1.02] transition-transform duration-500">
@@ -486,7 +479,89 @@ export default function ResumeAnalyzerDashboard() {
                       />
                     </div>
                   </div>
+
+                  <div className="mt-6 flex flex-wrap items-center gap-3"></div>
                 </div>
+                </div>
+              </div>
+
+              <div className="mt-12 px-2 sm:px-6 py-16 relative overflow-hidden">
+                <div className="text-center">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.35em] text-violet-300">
+                    Process
+                  </div>
+                  <h3 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">
+                    Process section<span className="text-violet-500"></span>
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-500">
+                    A simple 4-step flow to analyze, improve, and download.
+                  </p>
+                </div>
+
+                  <div className="relative mt-10">
+                    <div className="absolute left-0 right-0 top-1/2 h-px bg-violet-200/80 z-0"></div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+                      <div className="relative flex flex-col items-center md:h-[240px]">
+                        <div className="text-sm font-extrabold text-violet-700 md:absolute md:top-1 md:left-1/2 md:-translate-x-16">1.</div>
+                        <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-2 md:left-1/2 md:-translate-x-1/2">
+                          <Upload className="h-7 w-7" />
+                        </div>
+                        <div className="hidden md:block absolute left-1/2 top-[72px] bottom-1/2 w-px bg-violet-300 z-20"></div>
+                        <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
+                        <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:-translate-y-10 md:translate-x-6 relative z-30">
+                          <div className="text-sm font-bold text-violet-800">Upload & Target</div>
+                          <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
+                            Upload your resume and choose the job role you want to target.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="relative flex flex-col items-center md:h-[240px]">
+                        <div className="text-sm font-extrabold text-violet-700 md:absolute md:bottom-1 md:left-1/2 md:-translate-x-16">2.</div>
+                        <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-2 md:left-1/2 md:-translate-x-1/2">
+                          <FileText className="h-7 w-7" />
+                        </div>
+                        <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[72px] w-px bg-violet-300 z-20"></div>
+                        <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
+                        <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:translate-y-6 md:translate-x-6 relative z-30">
+                          <div className="text-sm font-bold text-violet-800">Add Job Description</div>
+                          <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
+                            Paste the JD to improve keyword matching and accuracy.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="relative flex flex-col items-center md:h-[240px]">
+                        <div className="text-sm font-extrabold text-violet-700 md:absolute md:top-1 md:left-1/2 md:-translate-x-16">3.</div>
+                        <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-2 md:left-1/2 md:-translate-x-1/2">
+                          <BarChart3 className="h-7 w-7" />
+                        </div>
+                        <div className="hidden md:block absolute left-1/2 top-[72px] bottom-1/2 w-px bg-violet-300 z-20"></div>
+                        <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
+                        <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:-translate-y-10 md:translate-x-6 relative z-30">
+                          <div className="text-sm font-bold text-violet-800">Analyze & Score</div>
+                          <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
+                            We calculate ATS score, readability, and keyword match.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="relative flex flex-col items-center md:h-[240px]">
+                        <div className="text-sm font-extrabold text-violet-700 md:absolute md:bottom-1 md:left-1/2 md:-translate-x-16">4.</div>
+                        <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-2 md:left-1/2 md:-translate-x-1/2">
+                          <Award className="h-7 w-7" />
+                        </div>
+                        <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[72px] w-px bg-violet-300 z-20"></div>
+                        <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
+                        <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:translate-y-6 md:translate-x-6 relative z-30">
+                          <div className="text-sm font-bold text-violet-800">Improve & Export</div>
+                          <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
+                            Get AI tips and download your optimized report.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
               </div>
             </div>
           )}
@@ -585,32 +660,19 @@ export default function ResumeAnalyzerDashboard() {
                 </div>
               )}
 
-              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.7fr]">
+              <div className="grid gap-6 lg:grid-cols-[0.9fr_1.7fr] items-stretch">
                 {/* LEFT COLUMN: GAUGE & OVERVIEW */}
-                <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.4)] p-6 sm:p-8">
+                <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.4)] p-6 sm:p-8 h-full">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 text-slate-600">
                       <div className="h-10 w-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">R</div>
                       <span className="text-lg font-semibold">ResumeIQ</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      {remainingCredits !== null && (
-                        <div className="px-3 py-1.5 rounded-xl bg-violet-50 border border-violet-100 text-violet-600 font-bold text-[10px] uppercase tracking-wider shadow-sm">
-                          {userPlan === "PRO" ? "PRO" : `${remainingCredits} Credits Left`}
-                        </div>
-                      )}
-                      <button 
-                        onClick={() => {
-                          setAnalyzed(false);
-                          setAnalysisResult(null);
-                          setFile(null);
-                          setJobDomain("");
-                          setJdText("");
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-50 text-violet-600 hover:bg-violet-100 transition-all font-bold text-xs border border-violet-100 shadow-sm"
-                      >
-                        <Upload className="h-3.5 w-3.5" />
-                        New Analysis
+                      <button onClick={fetchHistory} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur-md border border-slate-200 text-xs font-bold text-slate-700 shadow-sm hover:bg-white transition-all">
+                        <History className="h-4 w-4 text-violet-500" />
+                        View History
+                        {userPlan === "FREE" && <Lock className="h-3.5 w-3.5 text-slate-400 ml-1" />}
                       </button>
                     </div>
                   </div>
@@ -671,91 +733,46 @@ export default function ResumeAnalyzerDashboard() {
                       </div>
                     </div>
 
-                    {scoreBuckets.map((bucket) => (
-                      <div key={bucket.label} className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                        <span>{bucket.label}</span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 ${
-                            bucket.score >= 85
-                              ? "bg-emerald-50 text-emerald-600"
-                              : bucket.score >= 60
-                                ? "bg-amber-50 text-amber-600"
-                                : "bg-rose-50 text-rose-600"
-                          }`}
-                        >
-                          {bucket.score}%
-                        </span>
-                      </div>
-                    ))}
                   </div>
 
-                  {/* DYNAMIC DOWNLOAD BUTTON */}
-                  <button 
-                    onClick={handleDownloadPdf}
-                    className={`mt-8 w-full rounded-2xl font-semibold py-4 flex items-center justify-center gap-2 transition-all shadow-sm ${
-                      userPlan === "PRO" 
-                        ? "bg-slate-900 text-white hover:bg-slate-800" 
-                        : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
-                    }`}
-                  >
-                    {userPlan === "PRO" ? (
-                      <><Download className="h-5 w-5" /> Download Optimized Resume</>
-                    ) : (
-                      <><Lock className="h-4 w-4" /> Download Report (Pro Only)</>
-                    )}
-                  </button>
+                  {/* DYNAMIC DOWNLOAD + NEW ANALYSIS */}
+                  <div className="mt-8 grid gap-3 sm:grid-cols-[1.2fr_0.8fr] items-stretch">
+                    <button 
+                      onClick={handleDownloadPdf}
+                      className={`w-full h-12 rounded-2xl text-sm font-semibold px-3 flex items-center justify-center gap-2 transition-all shadow-sm whitespace-nowrap ${
+                        userPlan === "PRO" 
+                          ? "bg-slate-900 text-white hover:bg-slate-800" 
+                          : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
+                      }`}
+                    >
+                      {userPlan === "PRO" ? (
+                        <><Download className="h-5 w-5" /> Download Optimized Resume</>
+                      ) : (
+                        <><Lock className="h-4 w-4" /> Download Report (Pro Only)</>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAnalyzed(false);
+                        setAnalysisResult(null);
+                        setFile(null);
+                        setJobDomain("");
+                        setJdText("");
+                      }}
+                      className="w-full h-12 rounded-2xl text-sm font-semibold px-3 flex items-center justify-center gap-2 transition-all shadow-sm bg-white/80 text-violet-700 border border-violet-200 hover:bg-white whitespace-nowrap"
+                    >
+                      <Upload className="h-4 w-4" />
+                      New Analysis
+                    </button>
+                  </div>
                 </div>
 
                 {/* RIGHT COLUMN: AI INSIGHTS & KEYWORDS */}
-                <div className="space-y-6">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center justify-end gap-3"></div>
                   
-                  {/* Readability & Action Verbs */}
-                  <div className="rounded-[28px] bg-[#e8edf7] border border-white/70 shadow-[0_35px_80px_-55px_rgba(15,23,42,0.35)] p-6 sm:p-8">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                          <BarChart3 className="h-5 w-5" />
-                        </div>
-                        <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">Readability Score</p>
-                      </div>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">AI Verification</span>
-                    </div>
-
-                    <div className="mt-6 grid gap-5 sm:grid-cols-[1.1fr_0.9fr]">
-                      <div className="rounded-2xl bg-white p-6 shadow-sm text-center flex flex-col justify-center">
-                        <div className="relative mx-auto h-24 w-24">
-                          <svg viewBox="0 0 120 120" className="h-full w-full">
-                            <circle cx="60" cy="60" r="46" fill="none" stroke="#e2e8f0" strokeWidth="10" />
-                            <circle cx="60" cy="60" r="46" fill="none" stroke="#22c55e" strokeWidth="10" strokeLinecap="round" strokeDasharray="289" strokeDashoffset="40" />
-                          </svg>
-                          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-600">
-                            Optimal
-                          </div>
-                        </div>
-                        <p className="mt-3 text-sm font-semibold text-slate-700">Scan Readability</p>
-                      </div>
-
-                      <div className="rounded-2xl bg-white p-6 shadow-sm">
-                        <p className="text-sm font-semibold text-slate-700">Action Verbs Used</p>
-                        <div className="mt-4 space-y-3">
-                          {actionVerbs.map((verb) => (
-                            <div key={verb.label} className="flex items-center justify-between text-sm text-slate-600">
-                              <div className="flex items-center gap-2">
-                                {verb.status === "good" ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <XCircle className="h-4 w-4 text-rose-500" />}
-                                <span>{verb.label}</span>
-                              </div>
-                              <div className={`h-5 w-5 rounded-full ${verb.status === "good" ? "bg-emerald-100" : "bg-rose-100"} flex items-center justify-center`}>
-                                {verb.status === "good" ? <CheckCircle2 className="h-3 w-3 text-emerald-600" /> : <XCircle className="h-3 w-3 text-rose-600" />}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.35)] p-6 sm:p-8">
-                    <div className="flex items-center justify-between mb-6">
+                  <div className="rounded-[28px] bg-white/90 backdrop-blur border border-white/70 shadow-[0_25px_70px_-45px_rgba(15,23,42,0.35)] p-6 sm:p-8 h-full">
+                    <div className="flex items-center justify-between mb-6 min-h-[40px]">
                       <div>
                         <p className="text-xs font-semibold text-slate-500 tracking-[0.2em] uppercase">ATS Keyword Analysis</p>
                       </div>

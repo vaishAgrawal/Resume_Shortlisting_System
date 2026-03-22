@@ -44,6 +44,7 @@ export default function AuthModals({
     localStorage.setItem("role", loginRole);
     localStorage.setItem("userName", loginEmail.split("@")[0]);
     onCloseLogin();
+    window.location.href = loginRole === "HR" ? "/recruiter" : "/user-dashboard";
   };
   const handleSignup = () => {
     if (!signupName.trim() || !signupEmail.trim() || !signupPassword.trim()) {

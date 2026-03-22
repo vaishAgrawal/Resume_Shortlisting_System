@@ -1,4 +1,19 @@
+import { useNavigate } from "react-router-dom";
+
 export default function Footer() {
+  const navigate = useNavigate();
+
+  const handleDashboardClick = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const token = localStorage.getItem("jwtToken");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    const role = (localStorage.getItem("role") || "").toUpperCase();
+    navigate(role === "RECRUITER" ? "/recruiter" : "/user-dashboard");
+  };
+
   return (
     <footer className="bg-gradient-to-br from-[#1f1635] via-[#2a1f4d] to-[#1f1635] border-t border-white/10 pt-12 pb-6 relative overflow-hidden">
       
@@ -41,7 +56,15 @@ export default function Footer() {
           </h3>
           <ul className="space-y-2 text-base text-gray-400 font-medium">
             <li><a href="/" className="hover:text-purple-400 transition-all">Home</a></li>
-            <li><a href="/recruiter" className="hover:text-purple-400 transition-all">Dashboard</a></li>
+            <li>
+              <button
+                type="button"
+                onClick={handleDashboardClick}
+                className="hover:text-purple-400 transition-all"
+              >
+                Dashboard
+              </button>
+            </li>
             <li><a href="/dashboard" className="hover:text-purple-400 transition-all">Analytics</a></li>
           </ul>
         </div>
