@@ -66,6 +66,7 @@ public class UserCvAnalysisService {
             entity.setUser(user);
             entity.setTotalScore(response.getTotalScore());
             entity.setTargetDomain(request.getTargetDomain()); // Store the Job Title
+            entity.setResumeFileName(request.getResumeFileName()); // Store original filename
             entity.setScoreBreakdowns(objectMapper.writeValueAsString(response.getSectionScores()));
             entity.setMatchedKeywords(objectMapper.writeValueAsString(response.getMatchedKeywords()));
             

@@ -369,9 +369,19 @@ export default function ResumeAnalyzerDashboard() {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs font-semibold text-slate-500 flex items-center gap-2 mb-3">
+                        <div className="text-xs font-semibold text-slate-500 flex items-center gap-2 mb-2">
                           <Calendar className="w-3.5 h-3.5" />
                           {new Date(item.analyzedAt).toLocaleDateString()} at {new Date(item.analyzedAt).toLocaleTimeString()}
+                        </div>
+
+                        {/* File Name Badge */}
+                        <div className="flex items-center gap-2 mb-3">
+                           <div className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 flex items-center gap-1.5 shadow-sm">
+                             <FileText className="h-3 w-3 text-slate-400" />
+                             <span className="text-[10px] font-bold text-slate-600 truncate max-w-[150px]">
+                               {item.resumeFileName || "Original_Resume.pdf"}
+                             </span>
+                           </div>
                         </div>
                         
                         {/* Skills Preview */}

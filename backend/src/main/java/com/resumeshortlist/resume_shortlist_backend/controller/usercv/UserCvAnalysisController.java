@@ -131,6 +131,7 @@ public class UserCvAnalysisController {
             request.setResumeText(resumeText);
             request.setTargetDomain(targetDomain);
             request.setJdText(jdText);
+            request.setResumeFileName(resumeFile.getOriginalFilename());
 
             // 3. Analyze
             AnalysisResponseDTOUserCv response = analysisService.analyzeUserCv(user, request);
