@@ -73,6 +73,19 @@ public class UserCvAnalysisController {
         return ResponseEntity.ok(resultRepo.findByUserOrderByAnalyzedAtDesc(user));
     }
 
+    @GetMapping("/history/{analysisId}")
+    public ResponseEntity<?> getHistoryDetails(Principal principal, @PathVariable Long analysisId) {
+        UserForCv user = subscriptionService.getOrCreateUserForCv(principal.getName());
+        
+        // Safety: Ensure record exists and belongs to user
+        AnalysisResultForUser entity = resultRepo.findById(analysisId).orElseThrow();
+        if (!entity.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "Unauthorized access to this report."));
+        }
+
+        return ResponseEntity.ok(analysisService.getHistoryDetails(analysisId));
+    }
+
     // --- 3. DOWNLOAD REPORT ENDPOINT (GATED) ---
     @GetMapping("/download-report/{analysisId}")
     public ResponseEntity<?> downloadReport(Principal principal, @PathVariable Long analysisId) {
@@ -138,6 +151,15 @@ public class UserCvAnalysisController {
             ));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Could not fetch credits"));
+        }
+    }
+
+    @GetMapping("/domains")
+    public ResponseEntity<?> getAvailableDomains() {
+        try {
+            return ResponseEntity.ok(analysisService.getAvailableDomains());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to fetch domains"));
         }
     }
 }

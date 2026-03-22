@@ -6,6 +6,9 @@ import com.resumeshortlist.resume_shortlist_backend.entity.usercv.*;
 import com.resumeshortlist.resume_shortlist_backend.repository.usercv.AnalysisResultForUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Collections;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +20,23 @@ public class UserCvAnalysisService {
     private final UserJobDescriptionParserService jdParserService;   // <--- NEW
     private final AnalysisResultForUserRepository resultRepo;
     private final ObjectMapper objectMapper;
+
+    public AnalysisResponseDTOUserCv getHistoryDetails(Long analysisId) {
+        AnalysisResultForUser entity = resultRepo.findById(analysisId)
+                .orElseThrow(() -> new RuntimeException("Analysis report not found."));
+
+        try {
+            return AnalysisResponseDTOUserCv.builder()
+                    .totalScore(entity.getTotalScore())
+                    .sectionScores(objectMapper.readValue(entity.getScoreBreakdowns(), new TypeReference<List<ScoreBreakdownDTOUserCv>>() {}))
+                    .matchedKeywords(objectMapper.readValue(entity.getMatchedKeywords(), new TypeReference<List<String>>() {}))
+                    .missingKeywords(objectMapper.readValue(entity.getMissingKeywords(), new TypeReference<List<String>>() {}))
+                    .suggestions(objectMapper.readValue(entity.getSuggestions(), new TypeReference<List<String>>() {}))
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decode historical report: " + e.getMessage());
+        }
+    }
 
     public AnalysisResponseDTOUserCv analyzeUserCv(UserForCv user, UploadRequestDTOUserCv request) {
         
@@ -45,6 +65,7 @@ public class UserCvAnalysisService {
             AnalysisResultForUser entity = new AnalysisResultForUser();
             entity.setUser(user);
             entity.setTotalScore(response.getTotalScore());
+            entity.setTargetDomain(request.getTargetDomain()); // Store the Job Title
             entity.setScoreBreakdowns(objectMapper.writeValueAsString(response.getSectionScores()));
             entity.setMatchedKeywords(objectMapper.writeValueAsString(response.getMatchedKeywords()));
             
@@ -60,5 +81,39 @@ public class UserCvAnalysisService {
         }
 
         return response;
+    }
+
+    public java.util.Set<String> getAvailableDomains() {
+        java.util.Set<String> domains = new java.util.HashSet<>();
+        
+        // 1. From File System (job_descriptions folder)
+        java.io.File folder = new java.io.File("job_descriptions");
+        if (folder.exists() && folder.isDirectory()) {
+            java.io.File[] files = folder.listFiles((dir, name) -> 
+                name.endsWith(".txt") || name.endsWith(".pdf") || name.endsWith(".docx"));
+            if (files != null) {
+                for (java.io.File file : files) {
+                    String name = file.getName();
+                    name = name.replace(".txt", "").replace(".pdf", "").replace(".docx", "");
+                    
+                    String formattedName = java.util.Arrays.stream(name.split("_"))
+                            .map(word -> word.isEmpty() ? "" : word.substring(0, 1).toUpperCase() + word.substring(1))
+                            .collect(java.util.stream.Collectors.joining(" "));
+                    domains.add(formattedName);
+                }
+            }
+        }
+
+        // 2. Default set if empty
+        if (domains.isEmpty()) {
+            domains.add("Software Engineer");
+            domains.add("Backend Developer");
+            domains.add("Frontend Developer");
+            domains.add("Data Analyst");
+            domains.add("Product Manager");
+            domains.add("UI/UX Designer");
+        }
+
+        return domains;
     }
 }
