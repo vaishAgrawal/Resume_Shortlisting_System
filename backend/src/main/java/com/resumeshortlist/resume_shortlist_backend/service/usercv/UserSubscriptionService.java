@@ -78,4 +78,8 @@ public class UserSubscriptionService {
             response.setSubscriptionWarning("Upgrade to PRO for full semantic analysis and Resume Rewrite features.");
         }
     }
+
+    public void saveUser(UserForCv user) {
+        userForCvRepository.save(user);
+    }
 }

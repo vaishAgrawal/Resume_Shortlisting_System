@@ -16,4 +16,7 @@ public class UserForCv {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private SubscriptionForUser subscription;
+
+    @Column(columnDefinition = "TEXT")
+    private String unlockedTemplateIds = ""; // Comma-separated IDs for Add-ons
 }

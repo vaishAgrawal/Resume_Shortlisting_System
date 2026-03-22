@@ -57,10 +57,15 @@ public class UserCvAnalysisService {
                 parsedResume.isHasCertifications()
         );
 
-        // 4. Apply Subscription Limits (Locking advanced data for Free/Starter users)
+        // 4. Apply Subscription Limits
         subscriptionService.filterResponseByPlan(response, userPlan);
 
-        // 5. Save Results to Database for History
+        // 5. Map Raw Segments for Rewriting
+        response.setRawSummary(parsedResume.getRawSummary());
+        response.setRawExperience(parsedResume.getRawExperience());
+        response.setRawProjects(parsedResume.getRawProjects());
+
+        // 6. Save Results to Database
         try {
             AnalysisResultForUser entity = new AnalysisResultForUser();
             entity.setUser(user);

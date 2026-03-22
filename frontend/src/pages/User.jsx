@@ -24,7 +24,8 @@ import {
   ArrowUp,
   ArrowDown,
   Calendar,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
 import api from "../api/axios";
 
@@ -52,6 +53,16 @@ export default function ResumeAnalyzerDashboard() {
   const [showPricing, setShowPricing] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  
+  // Template States
+  const [templates, setTemplates] = useState([]);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+
+  // AI Rewrite States
+  const [isRewriting, setIsRewriting] = useState(false);
+  const [rewriteResult, setRewriteResult] = useState(null); // { category, original, improved }
+  const [showRewriteModal, setShowRewriteModal] = useState(false);
 
   const score = analysisResult?.totalScore || 0;
   const radius = 50;
@@ -98,6 +109,10 @@ export default function ResumeAnalyzerDashboard() {
           setRemainingCredits(creditRes.data.atsCreditsRemaining);
           setUserPlan(creditRes.data.plan);
         }
+
+        const templateRes = await api.get("/user-cv/templates");
+        console.log("DEBUG: Templates API Response:", templateRes.data);
+        setTemplates(Array.isArray(templateRes.data) ? templateRes.data : []);
       } catch (err) {
         console.error("Failed to fetch initial dashboard data:", err);
       }
@@ -129,34 +144,74 @@ export default function ResumeAnalyzerDashboard() {
       setError("Please upload a resume and select a domain.");
       return;
     }
-    
     setLoading(true);
+    setAnalyzed(false);
     setError(null);
     setActiveStep(0);
     
     try {
       const formData = new FormData();
-      formData.append("resumeFile", file);
-      formData.append("targetDomain", jobDomain);
+      formData.append("file", file);
+      formData.append("jobDomain", jobDomain);
       formData.append("jdText", jdText.trim());
 
-      const analysisRes = await api.post("/user-cv/analyze", formData, {
+      const res = await api.post("/user-cv/analyze", formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         }
       });
       
-      setAnalysisResult(analysisRes.data);
-      
-      const creditRes = await api.get("/user-cv/credits");
-      setRemainingCredits(creditRes.data.atsCreditsRemaining);
-      
+      setAnalysisResult(res.data);
       setAnalyzed(true);
+
+      const creditRes = await api.get("/user-cv/credits");
+      if (creditRes.status === 200) {
+        setRemainingCredits(creditRes.data.atsCreditsRemaining);
+        setUserPlan(creditRes.data.plan);
+      }
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.response?.data || err.message || "An unexpected error occurred.";
       setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRewrite = async (category) => {
+    if (userPlan === "FREE") {
+      setShowPricing(true);
+      return;
+    }
+
+    let originalText = "";
+    if (category === "Skills Match") originalText = analysisResult.rawSummary;
+    else if (category === "Experience") originalText = (analysisResult.rawExperience || []).join("\n");
+    else if (category === "Projects") originalText = (analysisResult.rawProjects || []).join("\n");
+    else originalText = analysisResult.rawSummary;
+
+    if (!originalText) {
+       alert("No content found to rewrite for this section. Please try a different category.");
+       return;
+    }
+
+    setIsRewriting(true);
+    try {
+      const res = await api.post("/user-cv/rewrite", {
+        category,
+        originalText,
+        jdContext: jdText
+      });
+
+      setRewriteResult({
+        category,
+        original: originalText,
+        improved: res.data.improvedText
+      });
+      setShowRewriteModal(true);
+    } catch (err) {
+      alert(err.response?.data?.error || "Rewrite failed. Try again.");
+    } finally {
+      setIsRewriting(false);
     }
   };
 
@@ -430,6 +485,21 @@ export default function ResumeAnalyzerDashboard() {
                     A free and fast AI resume checker doing crucial checks to ensure your resume
                     is ready to perform and get you interview callbacks.
                   </p>
+                  
+                  <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
+                    <button 
+                      onClick={() => setShowHistory(true)}
+                      className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"
+                    >
+                      <History className="h-4 w-4" /> View History
+                    </button>
+                    <button 
+                      onClick={() => setShowTemplates(true)}
+                      className="px-6 py-3 rounded-2xl bg-violet-50 border border-violet-100 text-violet-700 font-bold text-sm shadow-sm hover:bg-violet-100 transition-all flex items-center gap-2"
+                    >
+                      <LayoutGrid className="h-4 w-4" /> Resume Templates
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid lg:grid-cols-2 gap-16 items-start">
@@ -796,6 +866,30 @@ export default function ResumeAnalyzerDashboard() {
                                   {item.status === "warn" && <AlertCircle className="h-4 w-4 text-amber-500" />}
                                   {item.status === "bad" && <XCircle className="h-4 w-4 text-rose-500" />}
                                   <span>{item.label}</span>
+                                  {userPlan === "PRO" ? (
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRewrite(item.label);
+                                      }}
+                                      disabled={isRewriting}
+                                      className={`p-1 hover:bg-violet-100 rounded-lg text-violet-500 transition ml-1 ${isRewriting ? "animate-pulse" : ""}`}
+                                      title="Improve with AI"
+                                    >
+                                      <Sparkles className="h-3 w-3" />
+                                    </button>
+                                  ) : (
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowPricing(true);
+                                      }}
+                                      className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition ml-1"
+                                      title="Unlock AI Rewrite with PRO"
+                                    >
+                                      <Lock className="h-2.5 w-2.5" />
+                                    </button>
+                                  )}
                                 </div>
                                 <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                               </button>
@@ -932,6 +1026,172 @@ export default function ResumeAnalyzerDashboard() {
           )}
         </div>
       </div>
+      {/* TEMPLATE GALLERY MODAL */}
+      {showTemplates && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowTemplates(false)}></div>
+          <div className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-[2.5rem] bg-white shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Resume Templates</h3>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">Choose a professional design to rewrite your resume.</p>
+              </div>
+              <button onClick={() => setShowTemplates(false)} className="p-2 hover:bg-slate-100 rounded-full transition">
+                <X className="h-5 w-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {templates.map((template) => (
+                  <div key={template.id} className="group relative flex flex-col rounded-3xl border border-slate-200 bg-white p-2 hover:shadow-xl hover:border-violet-300 transition-all duration-300 h-full">
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-slate-100 border border-slate-100 mb-4">
+                      {template.previewImageUrl ? (
+                         <img src={template.previewImageUrl} alt={template.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      ) : (
+                         <div className="w-full h-full flex items-center justify-center text-slate-300">
+                           <LayoutGrid className="h-12 w-12" />
+                         </div>
+                      )}
+                      
+                      {template.isLocked && (
+                        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                           <Lock className="h-8 w-8 mb-2" />
+                           <span className="text-xs font-bold uppercase tracking-wider">Unlock in PRO</span>
+                        </div>
+                      )}
+
+                      {template.tier === "PREMIUM" && (
+                        <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-violet-600 text-white text-[10px] font-bold shadow-lg">
+                          PRO
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="px-3 pb-3 flex-1 flex flex-col">
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-bold text-slate-800 text-sm">{template.name}</h4>
+                        {template.isLocked && <Lock className="h-3 w-3 text-slate-400" />}
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed mb-4 flex-1">{template.description}</p>
+                      
+                      <button 
+                        disabled={template.isLocked}
+                        className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${
+                          template.isLocked 
+                            ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
+                            : "bg-violet-600 text-white hover:bg-violet-700 shadow-md shadow-violet-100"
+                        }`}
+                        onClick={() => {
+                          setSelectedTemplate(template);
+                          // Here you would navigate or trigger the rewrite flow
+                          alert(`Template ${template.name} selected! Feature coming soon.`);
+                        }}
+                      >
+                        {template.isLocked ? "Premium Design" : "Use Template"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {userPlan !== "PRO" && (
+              <div className="p-6 bg-violet-50 border-t border-violet-100 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-600">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-violet-900">Get Unlimited Access</p>
+                    <p className="text-xs text-violet-600">Unlock all 5 Premium Templates + AI Rewrites.</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowPricing(true)}
+                  className="px-6 py-2.5 bg-violet-600 text-white rounded-xl text-xs font-bold hover:bg-violet-700 transition"
+                >
+                  Upgrade to Pro
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* AI REWRITE RESULT MODAL */}
+      {showRewriteModal && rewriteResult && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowRewriteModal(false)}></div>
+          <div className="relative w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-[2.5rem] bg-white shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-violet-50/50">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-600">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">AI Improved {rewriteResult.category}</h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">Gemini has optimized your section for better impact.</p>
+                </div>
+              </div>
+              <button onClick={() => setShowRewriteModal(false)} className="p-2 hover:bg-white rounded-full transition shadow-sm">
+                <X className="h-5 w-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* ORIGINAL */}
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center gap-2 mb-3 px-1">
+                    <div className="h-2 w-2 rounded-full bg-slate-300"></div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Original Content</span>
+                  </div>
+                  <div className="flex-1 p-5 rounded-3xl bg-slate-50 border border-slate-100 text-sm text-slate-500 leading-relaxed font-medium whitespace-pre-wrap italic">
+                    {rewriteResult.original}
+                  </div>
+                </div>
+
+                {/* IMPROVED */}
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center gap-2 mb-3 px-1">
+                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">AI Optimized version</span>
+                  </div>
+                  <div className="flex-1 p-5 rounded-3xl bg-emerald-50/30 border border-emerald-100 text-sm text-slate-800 leading-relaxed font-bold shadow-inner whitespace-pre-wrap">
+                    {rewriteResult.improved}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-xs text-slate-500 font-medium">
+                Tip: Copy this text to your resume for better ATS performance.
+              </p>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button 
+                  onClick={() => setShowRewriteModal(false)}
+                  className="flex-1 sm:flex-none px-6 py-3 rounded-2xl text-sm font-bold text-slate-600 hover:bg-white transition border border-transparent hover:border-slate-200"
+                >
+                  Discard
+                </button>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(rewriteResult.improved);
+                    alert("Improved text copied to clipboard!");
+                    setShowRewriteModal(false);
+                  }}
+                  className="flex-1 sm:flex-none px-8 py-3 rounded-2xl text-sm font-bold bg-violet-600 text-white hover:bg-violet-700 shadow-lg shadow-violet-200 transition-all flex items-center justify-center gap-2"
+                >
+                  Copy & Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }

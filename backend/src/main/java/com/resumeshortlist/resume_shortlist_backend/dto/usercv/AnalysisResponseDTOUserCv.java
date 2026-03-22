@@ -13,4 +13,9 @@ public class AnalysisResponseDTOUserCv {
     private List<String> missingKeywords; // Locked in FREE
     private List<String> suggestions;     // Locked/Limited based on plan
     private String subscriptionWarning;   // e.g., "Upgrade to PRO to see missing skills"
+    
+    // NEW: Raw segments for AI rewriting on the frontend
+    private String rawSummary;
+    private List<String> rawExperience;
+    private List<String> rawProjects;
 }

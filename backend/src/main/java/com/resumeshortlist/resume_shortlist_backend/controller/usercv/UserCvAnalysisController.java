@@ -9,6 +9,8 @@ import com.resumeshortlist.resume_shortlist_backend.service.usercv.RazorpayServi
 import com.resumeshortlist.resume_shortlist_backend.service.usercv.UserCvAnalysisService;
 import com.resumeshortlist.resume_shortlist_backend.service.usercv.UserCvPdfService;
 import com.resumeshortlist.resume_shortlist_backend.service.usercv.UserSubscriptionService;
+import com.resumeshortlist.resume_shortlist_backend.service.usercv.UserCvTemplateService;
+import com.resumeshortlist.resume_shortlist_backend.service.usercv.UserCvRewriteService;
 import lombok.RequiredArgsConstructor;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,14 +25,43 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user-cv")
-@RequiredArgsConstructor
 public class UserCvAnalysisController {
 
     private final UserCvAnalysisService analysisService;
     private final UserSubscriptionService subscriptionService;
-    @Autowired private RazorpayService razorpayService;
-    @Autowired private AnalysisResultForUserRepository resultRepo;
-    @Autowired private UserCvPdfService pdfService;
+    private final RazorpayService razorpayService;
+    private final AnalysisResultForUserRepository resultRepo;
+    private final UserCvPdfService pdfService;
+    private final UserCvTemplateService templateService;
+    private final UserCvRewriteService rewriteService;
+
+    public UserCvAnalysisController(
+            UserCvAnalysisService analysisService,
+            UserSubscriptionService subscriptionService,
+            RazorpayService razorpayService,
+            AnalysisResultForUserRepository resultRepo,
+            UserCvPdfService pdfService,
+            UserCvTemplateService templateService,
+            UserCvRewriteService rewriteService) {
+        this.analysisService = analysisService;
+        this.subscriptionService = subscriptionService;
+        this.razorpayService = razorpayService;
+        this.resultRepo = resultRepo;
+        this.pdfService = pdfService;
+        this.templateService = templateService;
+        this.rewriteService = rewriteService;
+    }
+
+    @PostMapping("/rewrite")
+    public ResponseEntity<?> rewriteSection(Principal principal, @RequestBody RewriteRequestDTO data) {
+        try {
+            UserForCv user = subscriptionService.getOrCreateUserForCv(principal.getName());
+            String result = rewriteService.improveSection(user, data);
+            return ResponseEntity.ok(Map.of("improvedText", result));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
     // --- 1. PAYMENT ENDPOINTS ---
     @PostMapping("/create-order")
@@ -116,8 +147,8 @@ public class UserCvAnalysisController {
     @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> analyzeResume(
             Principal principal,
-            @RequestParam("resumeFile") MultipartFile resumeFile,
-            @RequestParam("targetDomain") String targetDomain,
+            @RequestParam("file") MultipartFile resumeFile,
+            @RequestParam("jobDomain") String targetDomain,
             @RequestParam(value = "jdText", defaultValue = "") String jdText) {
         try {
             UserForCv user = subscriptionService.getOrCreateUserForCv(principal.getName());
@@ -161,6 +192,37 @@ public class UserCvAnalysisController {
             return ResponseEntity.ok(analysisService.getAvailableDomains());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Failed to fetch domains"));
+        }
+    }
+
+    // --- 5. TEMPLATE ENDPOINTS ---
+    @GetMapping("/templates")
+    public ResponseEntity<?> getTemplates(Principal principal) {
+        try {
+            UserForCv user = subscriptionService.getOrCreateUserForCv(principal.getName());
+            return ResponseEntity.ok(templateService.getAvailableTemplates(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to fetch templates"));
+        }
+    }
+
+    @PostMapping("/unlock-template")
+    public ResponseEntity<?> unlockTemplate(Principal principal, @RequestBody Map<String, String> data) {
+        try {
+            UserForCv user = subscriptionService.getOrCreateUserForCv(principal.getName());
+            String templateId = data.get("templateId");
+            
+            String current = user.getUnlockedTemplateIds();
+            if (current == null) current = "";
+            
+            if (!current.contains(templateId)) {
+                user.setUnlockedTemplateIds(current.isEmpty() ? templateId : current + "," + templateId);
+                subscriptionService.saveUser(user);
+            }
+            
+            return ResponseEntity.ok(Map.of("message", "Template unlocked successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to unlock template"));
         }
     }
 }

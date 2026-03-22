@@ -18,16 +18,19 @@ public class UserResumeParserService {
     public ParsedResumeDTO parseResume(String resumeText) {
         GenerateContentConfig config = GenerateContentConfig.builder()
                 .responseMimeType("application/json")
-                .temperature(0.0f) // 0.0 forces the AI to be deterministic and factual
+                .temperature(0.0f)
                 .build();
 
         String prompt = "You are an expert ATS system. Extract the following information from the resume text into STRICT JSON.\n" +
                 "JSON Structure MUST be exactly:\n" +
                 "{\n" +
                 "  \"technicalSkills\": [\"skill1\", \"skill2\"],\n" +
-                "  \"totalYearsExperience\": (integer, calculate the total years worked. If none, 0),\n" +
-                "  \"projectCount\": (integer, count the distinct projects mentioned),\n" +
-                "  \"hasCertifications\": (boolean, true if any certifications/courses are present)\n" +
+                "  \"totalYearsExperience\": (integer),\n" +
+                "  \"projectCount\": (integer),\n" +
+                "  \"hasCertifications\": (boolean),\n" +
+                "  \"rawSummary\": \"(the professional summary text if present, else empty string)\",\n" +
+                "  \"rawExperience\": [\"raw job 1 description\", \"raw job 2 description\"],\n" +
+                "  \"rawProjects\": [\"raw project 1 description\", \"raw project 2 description\"]\n" +
                 "}\n\n" +
                 "RESUME TEXT:\n" + resumeText;
 
