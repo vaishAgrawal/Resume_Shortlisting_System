@@ -163,7 +163,7 @@ const handleSave = async () => {
       <Toaster position="top-right" />
 
       {/* LEFT SIDEBAR */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[260px] flex-col bg-[#3b2a63] px-6 py-8 text-white">
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[260px] flex-col bg-gradient-to-b from-[#3b2a63] to-[#5f4fb8] px-6 py-8 text-white">
         <div className="flex flex-col items-center text-center">
           <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-white bg-white/15 shadow-sm">
             {profile.imageUrl ? (
@@ -284,7 +284,7 @@ const handleSave = async () => {
       <div className="h-screen overflow-y-auto md:ml-[260px] px-6 md:px-10 py-8">
         <div className="mx-auto max-w-6xl space-y-8">
 
-          <div className="rounded-2xl bg-gradient-to-r from-[#2a1f4d] via-[#3b2a63] to-[#1f1635] px-6 py-5 shadow-md">
+          <div className="rounded-2xl bg-gradient-to-r from-[#3b2a63] to-[#5f4fb8] px-6 py-5 shadow-md">
             <h2 className="text-4xl font-bold tracking-tight text-white text-center">
               {isRecruiter ? "Recruiter Dashboard" : "User Dashboard"}
             </h2>
@@ -461,7 +461,7 @@ const handleSave = async () => {
                 {isEditing && (
                   <button
                     onClick={handleSave}
-                    className="mt-8 w-full py-4 bg-[#8b5cf6] text-white rounded-2xl font-bold hover:bg-[#7c3aed] transition"
+                    className="mt-8 w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-[#3b2a63] to-[#5f4fb8] hover:opacity-95 transition"
                   >
                     Save Changes
                   </button>
@@ -508,7 +508,7 @@ const handleSave = async () => {
 
                 <button
                   onClick={handlePasswordUpdate}
-                  className="w-full py-4 bg-[#8b5cf6] text-white rounded-2xl font-bold hover:bg-[#7c3aed] transition"
+                  className="w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-[#3b2a63] to-[#5f4fb8] hover:opacity-95 transition"
                 >
                   Update Password
                 </button>

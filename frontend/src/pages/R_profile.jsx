@@ -25,7 +25,7 @@ export default function ProfilePage() {
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const role = "recruiter";
+  const role = (localStorage.getItem("role") || "recruiter").toLowerCase();
   const isRecruiter = role === "recruiter";
 
   const [profile, setProfile] = useState({
@@ -52,8 +52,8 @@ export default function ProfilePage() {
         const nameParts = fullName.split(" ");
         setProfile({
           fullName,
-          firstName: isRecruiter ? "" : nameParts[0] || "",
-          lastName: isRecruiter ? "" : nameParts.slice(1).join(" ") || "",
+          firstName: nameParts[0] || "",
+          lastName: nameParts.slice(1).join(" ") || "",
           email: data.email || "",
           phone: data.phone || "",
           college: data.college || "",
@@ -103,7 +103,8 @@ const handleSave = async () => {
   try {
     const updatePayload = isRecruiter
       ? {
-          name: `${profile.firstName} ${profile.lastName}`.trim(),
+          firstName: profile.firstName,
+          lastName: profile.lastName,
           email: profile.email,
           phone: profile.phone,
           imageUrl: profile.imageUrl
@@ -163,7 +164,7 @@ const handleSave = async () => {
       <Toaster position="top-right" />
 
       {/* LEFT SIDEBAR */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[260px] flex-col bg-[#3b2a63] px-6 py-8 text-white">
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[260px] flex-col bg-gradient-to-b from-[#3b2a63] to-[#5f4fb8] px-6 py-8 text-white">
         <div className="flex flex-col items-center text-center">
           <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-white bg-white/15 shadow-sm">
             {profile.imageUrl ? (
@@ -190,85 +191,49 @@ const handleSave = async () => {
         </div>
 
         <div className="mt-10 space-y-5">
-          {!isRecruiter ? (
-            <>
-              <button
-                onClick={() => setActiveTab("info")}
-                className={`w-full text-left text-base font-bold tracking-wide transition flex items-center gap-3 ${
-                  activeTab === "info"
-                    ? "text-white"
-                    : "text-white/80 hover:text-white"
-                }`}
-              >
-                <FiUser className="text-lg" />
-                Personal Information
-              </button>
-              <button
-                onClick={() => setActiveTab("security")}
-                className={`w-full text-left text-base font-bold tracking-wide transition flex items-center gap-3 ${
-                  activeTab === "security"
-                    ? "text-white"
-                    : "text-white/80 hover:text-white"
-                }`}
-              >
-                <FiLock className="text-lg" />
-                Login & Password
-              </button>
-              <button
-                onClick={() => {
-                  window.location.href = "/user-dashboard";
-                }}
-                className="w-full text-left text-base font-bold tracking-wide text-white/80 hover:text-white transition flex items-center gap-3"
-              >
-                <FiHome className="text-lg" />
-                Home
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.href = "/login";
-                }}
-                className="w-full text-left text-base font-bold tracking-wide text-white/80 hover:text-white transition flex items-center gap-3"
-              >
-                <FiLogOut className="text-lg" />
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => {
-                  window.location.href = "/recruiter-dashboard";
-                }}
-                className="w-full text-left text-base font-bold tracking-wide text-white/80 hover:text-white transition flex items-center gap-3"
-              >
-                <FiGrid className="text-lg" />
-                Dashboard
-              </button>
-              <button className="w-full text-left text-base font-bold tracking-wide text-white/80 hover:text-white transition flex items-center gap-3">
-                <FiUsers className="text-lg" />
-                Candidates
-              </button>
-              <button className="w-full text-left text-base font-bold tracking-wide text-white/80 hover:text-white transition flex items-center gap-3">
-                <FiFileText className="text-lg" />
-                Shortlisted Resumes
-              </button>
-              <button className="w-full text-left text-base font-bold tracking-wide text-white/80 hover:text-white transition flex items-center gap-3">
-                <FiSettings className="text-lg" />
-                Settings
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.href = "/login";
-                }}
-                className="w-full text-left text-base font-bold tracking-wide text-white/80 hover:text-white transition flex items-center gap-3"
-              >
-                <FiLogOut className="text-lg" />
-                Logout
-              </button>
-            </>
-          )}
+          <>
+            <button
+              onClick={() => setActiveTab("info")}
+              className={`w-full text-left text-base font-bold tracking-wide transition flex items-center gap-3 ${
+                activeTab === "info"
+                  ? "text-white"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              <FiUser className="text-lg" />
+              Personal Information
+            </button>
+            <button
+              onClick={() => setActiveTab("security")}
+              className={`w-full text-left text-base font-bold tracking-wide transition flex items-center gap-3 ${
+                activeTab === "security"
+                  ? "text-white"
+                  : "text-white/80 hover:text-white"
+              }`}
+            >
+              <FiLock className="text-lg" />
+              Login & Password
+            </button>
+            <button
+              onClick={() => {
+                window.location.href = "/";
+              }}
+              className="w-full text-left text-base font-bold tracking-wide text-white/80 hover:text-white transition flex items-center gap-3"
+            >
+              <FiHome className="text-lg" />
+              Home
+            </button>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = "/login";
+              }}
+              className="w-full text-left text-base font-bold tracking-wide text-white/80 hover:text-white transition flex items-center gap-3"
+            >
+              <FiLogOut className="text-lg" />
+              Logout
+            </button>
+          </>
         </div>
 
         <div className="mt-auto pt-6">
@@ -284,7 +249,7 @@ const handleSave = async () => {
       <div className="h-screen overflow-y-auto md:ml-[260px] px-6 md:px-10 py-8">
         <div className="mx-auto max-w-6xl space-y-8">
 
-          <div className="rounded-2xl bg-gradient-to-r from-[#2a1f4d] via-[#3b2a63] to-[#1f1635] px-6 py-5 shadow-md">
+          <div className="rounded-2xl bg-gradient-to-r from-[#3b2a63] to-[#5f4fb8] px-6 py-5 shadow-md">
             <h2 className="text-4xl font-bold tracking-tight text-white text-center">
               {isRecruiter ? "Recruiter Dashboard" : "User Dashboard"}
             </h2>
@@ -311,175 +276,116 @@ const handleSave = async () => {
                   )}
                 </div>
 
-                {isRecruiter ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                        First Name
-                      </p>
-                      <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
-                        <FiUser className="text-indigo-300" />
-                        <input
-                          placeholder={isEditing ? "First Name" : ""}
-                          value={profile.firstName}
-                          onChange={(e) =>
-                            setProfile({ ...profile, firstName: e.target.value })
-                          }
-                          readOnly={!isEditing}
-                          className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                        Last Name
-                      </p>
-                      <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
-                        <FiUser className="text-indigo-300" />
-                        <input
-                          placeholder={isEditing ? "Last Name" : ""}
-                          value={profile.lastName}
-                          onChange={(e) =>
-                            setProfile({ ...profile, lastName: e.target.value })
-                          }
-                          readOnly={!isEditing}
-                          className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                        Email Address
-                      </p>
-                      <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
-                        <FiMail className="text-indigo-300" />
-                        <input
-                          disabled
-                          placeholder={isEditing ? "Email" : ""}
-                          value={profile.email}
-                          className="w-full bg-transparent px-0 py-1 text-gray-500 cursor-not-allowed outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                        Phone Number
-                      </p>
-                      <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
-                        <FiPhone className="text-indigo-300" />
-                        <input
-                          placeholder={isEditing ? "Phone" : ""}
-                          value={profile.phone}
-                          onChange={(e) =>
-                            setProfile({ ...profile, phone: e.target.value })
-                          }
-                          readOnly={!isEditing}
-                          type="tel"
-                          className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
-                        />
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                      First Name
+                    </p>
+                    <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+                      <FiUser className="text-indigo-300" />
+                      <input
+                        placeholder={isEditing ? "First Name" : ""}
+                        value={profile.firstName}
+                        onChange={(e) =>
+                          setProfile({ ...profile, firstName: e.target.value })
+                        }
+                        readOnly={!isEditing}
+                        className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
+                      />
                     </div>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                        First Name
-                      </p>
-                      <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
-                        <FiUser className="text-indigo-300" />
-                        <input
-                          placeholder={isEditing ? "First Name" : ""}
-                          value={profile.firstName}
-                          onChange={(e) =>
-                            setProfile({ ...profile, firstName: e.target.value })
-                          }
-                          readOnly={!isEditing}
-                          className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
-                        />
-                      </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                      Last Name
+                    </p>
+                    <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+                      <FiUser className="text-indigo-300" />
+                      <input
+                        placeholder={isEditing ? "Last Name" : ""}
+                        value={profile.lastName}
+                        onChange={(e) =>
+                          setProfile({ ...profile, lastName: e.target.value })
+                        }
+                        readOnly={!isEditing}
+                        className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
+                      />
                     </div>
+                  </div>
 
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                        Last Name
-                      </p>
-                      <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
-                        <FiUser className="text-indigo-300" />
-                        <input
-                          placeholder={isEditing ? "Last Name" : ""}
-                          value={profile.lastName}
-                          onChange={(e) =>
-                            setProfile({ ...profile, lastName: e.target.value })
-                          }
-                          readOnly={!isEditing}
-                          className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
-                        />
-                      </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                      Email Address
+                    </p>
+                    <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+                      <FiMail className="text-indigo-300" />
+                      <input
+                        disabled
+                        placeholder={isEditing ? "Email" : ""}
+                        value={profile.email}
+                        className="w-full bg-transparent px-0 py-1 text-gray-500 cursor-not-allowed outline-none"
+                      />
                     </div>
+                  </div>
 
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                        Email Address
-                      </p>
-                      <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
-                        <FiMail className="text-indigo-300" />
-                        <input
-                          disabled
-                          placeholder={isEditing ? "Email" : ""}
-                          value={profile.email}
-                          className="w-full bg-transparent px-0 py-1 text-gray-500 cursor-not-allowed outline-none"
-                        />
-                      </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                      Phone Number
+                    </p>
+                    <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+                      <FiPhone className="text-indigo-300" />
+                      <input
+                        placeholder={isEditing ? "Phone" : ""}
+                        value={profile.phone}
+                        onChange={(e) =>
+                          setProfile({ ...profile, phone: e.target.value })
+                        }
+                        readOnly={!isEditing}
+                        type="tel"
+                        className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
+                      />
                     </div>
+                  </div>
 
-                    {["phone", "college", "degree", "passingYear", "location"].map(
-                      (key) => (
-                        <div key={key} className="space-y-2">
-                          <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-                            {key.replace(/([A-Z])/g, " $1")}
-                          </p>
-                          <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
-                            {key === "phone" && <FiPhone className="text-indigo-300" />}
-                            {key === "college" && <FiBookOpen className="text-indigo-300" />}
-                            {key === "degree" && <FiAward className="text-indigo-300" />}
-                            {key === "passingYear" && <FiCalendar className="text-indigo-300" />}
-                            {key === "location" && <FiMapPin className="text-indigo-300" />}
+                  {!isRecruiter &&
+                    ["college", "degree", "passingYear", "location"].map((key) => (
+                      <div key={key} className="space-y-2">
+                        <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                          {key.replace(/([A-Z])/g, " $1")}
+                        </p>
+                        <div className="flex items-center gap-2 border-b border-indigo-100 pb-2">
+                          {key === "college" && <FiBookOpen className="text-indigo-300" />}
+                          {key === "degree" && <FiAward className="text-indigo-300" />}
+                          {key === "passingYear" && <FiCalendar className="text-indigo-300" />}
+                          {key === "location" && <FiMapPin className="text-indigo-300" />}
 
-                            <input
-                              placeholder={isEditing ? key.replace(/([A-Z])/g, " $1") : ""}
-                              value={profile[key]}
-                              onChange={(e) =>
-                                setProfile({
-                                  ...profile,
-                                  [key]: e.target.value
-                                })
-                              }
-                              readOnly={!isEditing}
-                              type={
-                                key === "phone"
-                                  ? "tel"
-                                  : key === "passingYear"
-                                  ? "number"
-                                  : "text"
-                              }
-                              min={key === "passingYear" ? "1900" : undefined}
-                              className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
-                            />
-                          </div>
+                          <input
+                            placeholder={isEditing ? key.replace(/([A-Z])/g, " $1") : ""}
+                            value={profile[key]}
+                            onChange={(e) =>
+                              setProfile({
+                                ...profile,
+                                [key]: e.target.value
+                              })
+                            }
+                            readOnly={!isEditing}
+                            type={
+                              key === "passingYear"
+                                ? "number"
+                                : "text"
+                            }
+                            min={key === "passingYear" ? "1900" : undefined}
+                            className="w-full bg-transparent px-0 py-1 text-indigo-900 outline-none"
+                          />
                         </div>
-                      )
-                    )}
-                  </div>
-                )}
+                      </div>
+                    ))}
+                </div>
 
                 {isEditing && (
                   <button
                     onClick={handleSave}
-                    className="mt-8 w-full py-4 bg-[#8b5cf6] text-white rounded-2xl font-bold hover:bg-[#7c3aed] transition"
+                    className="mt-8 w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-[#3b2a63] to-[#5f4fb8] hover:opacity-95 transition"
                   >
                     Save Changes
                   </button>
@@ -526,7 +432,7 @@ const handleSave = async () => {
 
                 <button
                   onClick={handlePasswordUpdate}
-                  className="w-full py-4 bg-[#8b5cf6] text-white rounded-2xl font-bold hover:bg-[#7c3aed] transition"
+                  className="w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-[#3b2a63] to-[#5f4fb8] hover:opacity-95 transition"
                 >
                   Update Password
                 </button>

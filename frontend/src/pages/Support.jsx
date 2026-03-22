@@ -75,20 +75,20 @@ export default function Support() {
 
   return (
 
-    <div className="bg-brand-dark text-gray-900 font-sans">
+    <div className="bg-gradient-to-br from-[#f7f1ff] via-[#efe7ff] to-[#e9f0ff] text-slate-900 font-sans">
 
       {/* HERO */}
-      <section className="min-h-[40vh] flex items-center justify-center pt-24 pb-12 relative overflow-hidden">
+      <section className="min-h-[40vh] flex items-center justify-center pt-28 lg:pt-32 pb-12 relative overflow-hidden">
 
-        <div className="absolute top-0 left-1/4 w-64 h-64 bg-brand-primary/20 rounded-full blur-[100px]"></div>
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-violet-300/40 rounded-full blur-[100px]"></div>
 
         <div className="text-center z-10" data-aos="fade-up">
 
-          <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            How can we <span className="text-gradient">help?</span>
+          <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+            How can we <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-500">help?</span>
           </h1>
 
-          <p className="text-gray-600 max-w-xl mx-auto">
+          <p className="text-slate-600 max-w-xl mx-auto">
             Search our knowledge base or contact our support team below.
           </p>
 
@@ -106,7 +106,7 @@ export default function Support() {
           data-aos="fade-right"
         >
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">
             Send us a message
           </h2>
 
@@ -115,7 +115,7 @@ export default function Support() {
             <div className="grid grid-cols-2 gap-4 mb-4">
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-600 uppercase">
+                <label className="text-xs font-bold text-slate-600 uppercase">
                   First Name
                 </label>
 
@@ -124,14 +124,14 @@ export default function Support() {
                   value={form.firstname || ""}
                   onChange={handleChange}
                   required
-                  className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 placeholder-gray-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none transition-colors"
-                  placeholder="John"
+                  className="w-full bg-white border border-gray-200 rounded-xl p-3 text-slate-900 placeholder-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40 focus:outline-none transition-colors"
+                  placeholder="first name"
                 />
               </div>
 
               <div className="space-y-2">
 
-                <label className="text-xs font-bold text-gray-600 uppercase">
+                <label className="text-xs font-bold text-slate-600 uppercase">
                   Last Name
                 </label>
 
@@ -140,8 +140,8 @@ export default function Support() {
                   value={form.lastname || ""}
                   onChange={handleChange}
                   required
-                  className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 placeholder-gray-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none transition-colors"
-                  placeholder="Doe"
+                  className="w-full bg-white border border-gray-200 rounded-xl p-3 text-slate-900 placeholder-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40 focus:outline-none transition-colors"
+                  placeholder="last name"
                 />
 
               </div>
@@ -150,7 +150,7 @@ export default function Support() {
 
             <div className="space-y-2 mb-4">
 
-              <label className="text-xs font-bold text-gray-600 uppercase">
+              <label className="text-xs font-bold text-slate-600 uppercase">
                 Email
               </label>
 
@@ -160,15 +160,15 @@ export default function Support() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 placeholder-gray-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none transition-colors"
-                placeholder="john@example.com"
+                className="w-full bg-white border border-gray-200 rounded-xl p-3 text-slate-900 placeholder-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40 focus:outline-none transition-colors"
+                placeholder="mail"
               />
 
             </div>
 
             <div className="space-y-2 mb-6">
 
-              <label className="text-xs font-bold text-gray-600 uppercase">
+              <label className="text-xs font-bold text-slate-600 uppercase">
                 Message
               </label>
 
@@ -178,7 +178,7 @@ export default function Support() {
                 value={form.message}
                 onChange={handleChange}
                 required
-                className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 placeholder-gray-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none transition-colors"
+                className="w-full bg-white border border-gray-200 rounded-xl p-3 text-slate-900 placeholder-gray-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-300/40 focus:outline-none transition-colors"
                 placeholder="Describe your issue..."
               ></textarea>
 
@@ -187,7 +187,7 @@ export default function Support() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-primary hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-brand-primary/20 hover:-translate-y-1"
+              className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-violet-300/40 hover:-translate-y-1"
             >
 
               {loading ? (
@@ -212,7 +212,7 @@ export default function Support() {
 
           <div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">
               Frequently Asked Questions
             </h2>
 
@@ -220,12 +220,12 @@ export default function Support() {
 
               <div className="bg-brand-card p-5 rounded-xl border border-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
 
-                <h3 className="font-bold text-gray-900 mb-2">
-                  <i className="fas fa-file-upload text-brand-primary mr-2"></i>
+                <h3 className="font-bold text-slate-900 mb-2">
+                  <i className="fas fa-file-upload text-violet-500 mr-2"></i>
                   How many resumes can I upload?
                 </h3>
 
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   For the demo version we recommend uploading up to 20 files at
                   a time for optimal speed.
                 </p>
@@ -234,12 +234,12 @@ export default function Support() {
 
               <div className="bg-brand-card p-5 rounded-xl border border-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
 
-                <h3 className="font-bold text-gray-900 mb-2">
-                  <i className="fas fa-robot text-brand-primary mr-2"></i>
+                <h3 className="font-bold text-slate-900 mb-2">
+                  <i className="fas fa-robot text-violet-500 mr-2"></i>
                   Is the parsing accurate?
                 </h3>
 
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   We target ≥85% parsing accuracy using Apache OpenNLP and
                   PDFBox.
                 </p>
@@ -248,12 +248,12 @@ export default function Support() {
 
               <div className="bg-brand-card p-5 rounded-xl border border-gray-200 transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
 
-                <h3 className="font-bold text-gray-900 mb-2">
-                  <i className="fas fa-lock text-brand-primary mr-2"></i>
+                <h3 className="font-bold text-slate-900 mb-2">
+                  <i className="fas fa-lock text-violet-500 mr-2"></i>
                   Is my data secure?
                 </h3>
 
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   Yes. We use JWT authentication and do not share candidate data.
                 </p>
 
@@ -268,16 +268,10 @@ export default function Support() {
       </div>
 
 
-      {/* FOOTER */}
-
-      <footer className="text-center text-gray-500 text-sm border-t border-gray-200 p-8">
-
-        © {new Date().getFullYear()} Graphura India Private Limited — All rights
-        reserved.
-
-      </footer>
+     
 
     </div>
 
   );
 }
+
