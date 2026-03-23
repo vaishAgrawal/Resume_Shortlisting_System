@@ -20,21 +20,21 @@ const DOMAIN_OPTIONS = [
 ];
 
 const SKILLS_BY_DOMAIN = {
-  "Sales & Marketing": ["Lead Gen", "CRM", "Cold Email", "Ads", "SEO"],
-  "Data Science & Analytics": ["Python", "SQL", "Pandas", "ML", "Power BI"],
-  "Human Resources": ["Recruitment", "Onboarding", "Payroll", "Compliance"],
-  "Social Media Management": ["Content", "Scheduling", "Analytics"],
-  "Graphic Design": ["Figma", "Adobe PS", "Branding"],
-  "Digital Marketing": ["SEO", "SEM", "GA4", "Copywriting"],
-  "Video Editing": ["Premiere", "After Effects", "Motion"],
-  "Full Stack Developer": ["JavaScript", "React", "Node.js", "SQL"],
-  "MERN Stack Developer": ["MongoDB", "Express", "React", "Node.js"],
-  "E-Mail & Outreaching": ["Outreach", "Deliverability", "Copywriting"],
-  "Content Writing": ["Blogs", "SEO", "Editing"],
-  "Content Creator": ["Scripting", "Editing", "Publishing"],
-  "UI/UX Designing": ["Figma", "Wireframes", "Prototyping"],
-  "Front-End Developer": ["HTML", "CSS", "React"],
-  "Back-End Developer": ["Node.js", "Python", "Java", "APIs"],
+        "Sales & Marketing": ["Market Research", "SEO", "Content Strategy", "CRM (Salesforce)", "Email Marketing", "Social Media Advertising", "Lead Generation", "Public Relations", "Brand Management"],
+        "Data Science & Analytics": ["Python", "R", "SQL", "Machine Learning", "Data Visualization", "Big Data", "Statistical Analysis", "Deep Learning", "Pandas", "NumPy"],
+        "Human Resources": ["Recruitment", "Onboarding", "Employee Relations", "HRIS", "Compensation & Benefits", "Labor Law", "Performance Management", "Talent Acquisition"],
+        "Social Media Management": ["Instagram Marketing", "Facebook Ads", "Community Management", "TikTok Strategy", "Content Scheduling", "Analytics", "Crisis Communication", "Influencer Marketing"],
+        "Digital Marketing": ["Google Ads", "SEO", "PPC", "Google Analytics", "Content Marketing", "CRO", "Email Marketing", "Marketing Automation", "HubSpot"],
+        "Graphic Design": ["Adobe Photoshop", "Adobe Illustrator", "InDesign", "Branding", "Typography", "UI/UX Design", "Print Design", "Vector Graphics", "Figma"],
+        "Video Editing": ["Adobe Premiere Pro", "Final Cut Pro", "Motion Graphics", "Color Correction", "Sound Design", "After Effects", "Davinci Resolve"],
+        "Full Stack Developer": ["JavaScript", "Node.js", "React", "Python", "SQL", "NoSQL", "AWS", "REST APIs", "Git"],
+        "MERN Stack Developer": ["MongoDB", "Express.js", "React", "Node.js", "Redux", "REST APIs", "Mongoose", "JWT"],
+        "E-Mail & Outreaching": ["Cold Emailing", "Outreach Tools", "A/B Testing", "Sequencing", "Lead Generation", "HubSpot", "Mailchimp"],
+        "Content Writing": ["Blogging", "Copywriting", "SEO Content", "Technical Writing", "Editing", "Research", "Content Strategy"],
+        "Content Creator": ["Videography", "Scripting", "Social Media Strategy", "Community Management", "Live Streaming", "Storytelling", "Adobe Creative Suite"],
+        "UI/UX Designing": ["Figma", "Sketch", "Prototyping", "User Research", "Wireframing", "Usability Testing", "Design Systems", "Adobe XD"],
+        "Front-End Developer": ["HTML/CSS", "JavaScript", "React", "Angular", "Vue", "Tailwind CSS", "Responsive Design", "Webpack", "Accessibility"],
+        "Back-End Developer": ["Node.js", "Python", "Java", "Database Design", "API Development", "Security", "Microservices", "Docker"],
 };
 
 export default function Recruiter() {
@@ -44,6 +44,7 @@ export default function Recruiter() {
   const [selectedSkill, setSelectedSkill] = useState("");
   const [skills, setSkills] = useState([]);
   const [toast, setToast] = useState({ message: "", type: "info" });
+  const [isDragging, setIsDragging] = useState(false);
   const maxLimit = 20;
   const remainingResumes = Math.max(0, maxLimit - resumeFiles.length);
 
@@ -52,23 +53,71 @@ export default function Recruiter() {
     return SKILLS_BY_DOMAIN[domain] || [];
   }, [domain]);
 
+  const mergeFiles = (currentFiles, incomingFiles) => {
+    const map = new Map();
+    currentFiles.forEach((file) => {
+      map.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+    });
+    incomingFiles.forEach((file) => {
+      map.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+    });
+    return Array.from(map.values());
+  };
+
   const onResumeChange = (event) => {
     const files = Array.from(event.target.files || []);
-    if (files.length > maxLimit) {
-      alert("You can only upload 20 resumes.");
+    if (files.length === 0) return;
+    const merged = mergeFiles(resumeFiles, files);
+    if (merged.length > maxLimit) {
+      showToast(`You can only upload ${maxLimit} resumes.`, "error");
       event.target.value = "";
-      setResumeFiles([]);
       return;
     }
-    setResumeFiles(files);
+    setResumeFiles(merged);
+    event.target.value = "";
+  };
+
+  const onDropResumes = (event) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(event.dataTransfer.files || []);
+    if (files.length === 0) return;
+    const merged = mergeFiles(resumeFiles, files);
+    if (merged.length > maxLimit) {
+      showToast(`You can only upload ${maxLimit} resumes.`, "error");
+      return;
+    }
+    setResumeFiles(merged);
+  };
+
+  const removeResumeFile = (fileToRemove) => {
+    setResumeFiles((prev) =>
+      prev.filter(
+        (file) =>
+          !(
+            file.name === fileToRemove.name &&
+            file.size === fileToRemove.size &&
+            file.lastModified === fileToRemove.lastModified
+          )
+      )
+    );
   };
 
   const addSkill = () => {
-    if (!selectedSkill) return;
+    if (!selectedSkill || selectedSkill === "__all__") return;
     if (!skills.includes(selectedSkill)) {
       setSkills((prev) => [...prev, selectedSkill]);
     }
     setSelectedSkill("");
+  };
+
+  const selectAllSkills = () => {
+    if (!domain) {
+      showToast("Please select a job domain first.", "error");
+      return;
+    }
+    setSkills(availableSkills);
+    setSelectedSkill("__all__");
   };
 
   const removeSkill = (skill) => {
@@ -141,10 +190,10 @@ export default function Recruiter() {
               </p>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-16 items-start">
-              <div className="space-y-8 flex flex-col items-center">
+            <div className="grid lg:grid-cols-2 gap-16 items-start lg:items-stretch">
+              <div className="space-y-8 flex flex-col items-center lg:items-stretch">
               {/* Upload Resumes */}
-              <section className="w-full max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8">
+              <section className="w-full max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8 lg:h-full">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-bold text-slate-900">Upload Resumes</h2>
@@ -162,19 +211,29 @@ export default function Recruiter() {
                     resumes (PDF, DOC, DOCX) for a single account.
                   </p>
 
-                  <label className="group block border-2 border-dashed border-violet-200 rounded-[2rem] p-10 text-center cursor-pointer hover:border-violet-400 hover:bg-violet-50/40 transition-all duration-300">
+                  <label
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      setIsDragging(true);
+                    }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={onDropResumes}
+                    className={`group block border-2 border-dashed rounded-[2rem] p-10 text-center cursor-pointer transition-all duration-300 ${
+                      isDragging
+                        ? "border-violet-500 bg-violet-100/60"
+                        : "border-violet-200 hover:border-violet-400 hover:bg-violet-50/40"
+                    }`}
+                  >
                     <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 group-hover:scale-110 transition-transform">
                       <i className="fas fa-cloud-upload-alt text-2xl"></i>
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-2">Drop resumes here or choose files.</h3>
                     <p className="text-sm text-slate-500 mb-6">PDF & DOCX only. Max 20 files.</p>
-                    <p className="text-xs text-slate-400 mb-4">You can select multiple files or choose a folder.</p>
+                    <p className="text-xs text-slate-400 mb-4">You can select multiple files or drag and drop them here.</p>
                     <input
                       type="file"
                       multiple
                       accept=".pdf,.doc,.docx"
-                      webkitdirectory="true"
-                      directory="true"
                       className="hidden"
                       onChange={onResumeChange}
                     />
@@ -186,11 +245,24 @@ export default function Recruiter() {
                   {resumeFiles.length > 0 && (
                     <div className="max-h-40 overflow-y-auto space-y-2 text-sm text-slate-600">
                       {resumeFiles.map((file) => (
-                        <div key={file.name} className="flex justify-between bg-violet-50/60 p-2 rounded-lg">
+                        <div
+                          key={`${file.name}-${file.size}-${file.lastModified}`}
+                          className="flex items-center justify-between gap-3 bg-violet-50/60 p-2 rounded-lg"
+                        >
                           <span className="truncate">{file.name}</span>
-                          <span className="text-slate-400 text-xs">
-                            {(file.size / 1024).toFixed(1)} KB
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-400 text-xs">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeResumeFile(file)}
+                              aria-label={`Remove ${file.name}`}
+                              className="h-7 w-7 rounded-full border border-violet-200 bg-white text-violet-500 hover:bg-violet-100 hover:text-violet-700 transition"
+                            >
+                              ×
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -200,8 +272,8 @@ export default function Recruiter() {
 
             </div>
 
-              <div className="hidden lg:block self-start">
-                <section className="w-full max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8">
+              <div className="hidden lg:flex self-start w-full justify-center items-stretch">
+                <section className="w-full max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8 lg:h-full lg:min-h-[520px]">
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-lg font-bold text-slate-900">Find Your Perfect Match</h2>
@@ -234,19 +306,38 @@ export default function Recruiter() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Required Skills
-                      </label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-semibold text-slate-700">
+                          Required Skills
+                        </label>
+                        {domain &&
+                        availableSkills.length > 0 &&
+                        skills.length === availableSkills.length ? (
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                            All Selected
+                          </span>
+                        ) : null}
+                      </div>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <select
                             value={selectedSkill}
-                            onChange={(e) => setSelectedSkill(e.target.value)}
-                            className="w-full rounded-xl border border-violet-200 bg-white/90 px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "__all__") {
+                                selectAllSkills();
+                                return;
+                              }
+                              setSelectedSkill(value);
+                            }}
+                            className={`w-full rounded-xl border border-violet-200 px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 ${
+                              selectedSkill === "__all__" ? "bg-violet-100/70" : "bg-white/90"
+                            }`}
                           >
                             <option value="" disabled>
                               Select a Skill
                             </option>
+                            <option value="__all__">Select All </option>
                             {availableSkills.map((skill) => (
                               <option key={skill} value={skill}>
                                 {skill}
@@ -321,16 +412,18 @@ export default function Recruiter() {
               </p>
             </div>
 
-              <div className="relative mt-16">
+              <div className="relative mt-24">
                 <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-violet-200/80 z-0"></div>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
                     <div className="relative flex flex-col items-center md:h-[240px]">
-                      <div className="text-sm font-extrabold text-violet-900 md:absolute md:top-1 md:left-1/2 md:-translate-x-16">1.</div>
-                      <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-[calc(50%+56px)] md:left-1/2 md:-translate-x-1/2">
+                      <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-[calc(50%+100px)] md:left-1/2 md:-translate-x-1/2">
+                        <span className="absolute -left-7 top-1/2 -translate-y-1/2 text-sm font-extrabold text-violet-900">
+                          1.
+                        </span>
                         <i className="fas fa-cloud-upload-alt text-lg"></i>
                       </div>
-                      <div className="hidden md:block absolute left-1/2 top-[calc(50%-56px)] bottom-1/2 w-0.5 bg-violet-300 z-20"></div>
-                      <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
+                      <div className="hidden md:block absolute left-1/2 top-[calc(50%-100px)] bottom-1/2 w-0.5 bg-violet-300 z-20"></div>
+                      <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500 z-30"></div>
                       <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:-translate-y-24 md:translate-x-6 relative z-30">
                         <div className="text-sm font-bold text-violet-900">Upload Resumes</div>
                         <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
@@ -340,12 +433,14 @@ export default function Recruiter() {
                     </div>
 
                     <div className="relative flex flex-col items-center md:h-[240px]">
-                      <div className="text-sm font-extrabold text-violet-900 md:absolute md:bottom-1 md:left-1/2 md:-translate-x-16">2.</div>
-                      <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-[calc(50%+56px)] md:left-1/2 md:-translate-x-1/2">
+                      <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-[calc(50%+100px)] md:left-1/2 md:-translate-x-1/2">
+                        <span className="absolute -left-7 top-1/2 -translate-y-1/2 text-sm font-extrabold text-violet-900">
+                          2.
+                        </span>
                         <i className="fas fa-briefcase text-lg"></i>
                       </div>
-                      <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[calc(50%-56px)] w-0.5 bg-violet-300 z-20"></div>
-                      <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
+                      <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[calc(50%-100px)] w-0.5 bg-violet-300 z-20"></div>
+                      <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500 z-30"></div>
                       <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:translate-y-2 md:translate-x-6 relative z-30">
                         <div className="text-sm font-bold text-violet-900">Select Domain</div>
                         <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
@@ -355,12 +450,14 @@ export default function Recruiter() {
                     </div>
 
                     <div className="relative flex flex-col items-center md:h-[240px]">
-                      <div className="text-sm font-extrabold text-violet-900 md:absolute md:top-1 md:left-1/2 md:-translate-x-16">3.</div>
-                      <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-[calc(50%+56px)] md:left-1/2 md:-translate-x-1/2">
+                      <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-[calc(50%+100px)] md:left-1/2 md:-translate-x-1/2">
+                        <span className="absolute -left-7 top-1/2 -translate-y-1/2 text-sm font-extrabold text-violet-900">
+                          3.
+                        </span>
                         <i className="fas fa-check text-lg"></i>
                       </div>
-                      <div className="hidden md:block absolute left-1/2 top-[calc(50%-56px)] bottom-1/2 w-0.5 bg-violet-300 z-20"></div>
-                      <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
+                      <div className="hidden md:block absolute left-1/2 top-[calc(50%-100px)] bottom-1/2 w-0.5 bg-violet-300 z-20"></div>
+                      <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500 z-30"></div>
                       <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:-translate-y-24 md:translate-x-6 relative z-30">
                         <div className="text-sm font-bold text-violet-900">Add Skills</div>
                         <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
@@ -370,12 +467,14 @@ export default function Recruiter() {
                     </div>
 
                     <div className="relative flex flex-col items-center md:h-[240px]">
-                      <div className="text-sm font-extrabold text-violet-900 md:absolute md:bottom-1 md:left-1/2 md:-translate-x-16">4.</div>
-                      <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-[calc(50%+56px)] md:left-1/2 md:-translate-x-1/2">
+                      <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-[calc(50%+120px)] md:left-1/2 md:-translate-x-1/2">
+                        <span className="absolute -left-7 top-1/2 -translate-y-1/2 text-sm font-extrabold text-violet-900">
+                          4.
+                        </span>
                         <i className="fas fa-chart-line text-lg"></i>
                       </div>
-                      <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[calc(50%-56px)] w-0.5 bg-violet-300 z-20"></div>
-                      <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
+                      <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[calc(50%-120px)] w-0.5 bg-violet-300 z-20"></div>
+                      <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500 z-30"></div>
                       <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:translate-y-2 md:translate-x-6 relative z-30">
                         <div className="text-sm font-bold text-violet-900">Analyze Candidates</div>
                         <p className="mt-1 text-xs text-violet-500 max-w-[180px]">

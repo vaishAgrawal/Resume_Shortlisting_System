@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function Footer() {
   const navigate = useNavigate();
+  const role = (localStorage.getItem("role") || "").toUpperCase();
+  const isRecruiter = role === "RECRUITER";
 
   const handleDashboardClick = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -37,14 +39,32 @@ export default function Footer() {
           </p>
           {/* SOCIAL ICONS */}
           <div className="flex space-x-3 mt-5">
-            <a className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-purple-300 hover:bg-[#8b5cf6] hover:text-white transition-all cursor-pointer">
+            <a
+              href="https://x.com/Graphura"
+              target="_blank"
+              rel="noreferrer"
+              className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-purple-300 hover:bg-[#8b5cf6] hover:text-white transition-all cursor-pointer"
+              aria-label="Graphura on X"
+            >
               <i className="fab fa-twitter"></i>
             </a>
-            <a className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-purple-300 hover:bg-[#8b5cf6] hover:text-white transition-all cursor-pointer">
+            <a
+              href="https://www.linkedin.com/company/graphura-india-private-limited/"
+              target="_blank"
+              rel="noreferrer"
+              className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-purple-300 hover:bg-[#8b5cf6] hover:text-white transition-all cursor-pointer"
+              aria-label="Graphura on LinkedIn"
+            >
               <i className="fab fa-linkedin-in"></i>
             </a>
-            <a className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-purple-300 hover:bg-[#8b5cf6] hover:text-white transition-all cursor-pointer">
-              <i className="fab fa-facebook-f"></i>
+            <a
+              href="https://www.instagram.com/graphura.in"
+              target="_blank"
+              rel="noreferrer"
+              className="w-9 h-9 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-purple-300 hover:bg-[#8b5cf6] hover:text-white transition-all cursor-pointer"
+              aria-label="Graphura on Instagram"
+            >
+              <i className="fab fa-instagram"></i>
             </a>
           </div>
         </div>
@@ -65,7 +85,9 @@ export default function Footer() {
                 Dashboard
               </button>
             </li>
-            <li><a href="/dashboard" className="hover:text-purple-400 transition-all">Analytics</a></li>
+            {isRecruiter && (
+              <li><a href="/dashboard" className="hover:text-purple-400 transition-all">Analytics</a></li>
+            )}
           </ul>
         </div>
 

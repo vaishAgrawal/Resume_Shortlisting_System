@@ -73,12 +73,6 @@ export default function ProfilePage() {
 const handleAvatarChange = (e) => {
   const file = e.target.files[0];
   if (file) {
-    // Basic validation: max 2MB
-    if (file.size > 2000000) {
-      toast.error("Image too large! Please choose a file under 2MB.");
-      return;
-    }
-
     const reader = new FileReader();
     reader.onload = () => {
       setProfile((prev) => {
@@ -91,6 +85,8 @@ const handleAvatarChange = (e) => {
         window.dispatchEvent(new Event("profileUpdated"));
         return updated;
       });
+      setIsEditing(true);
+      setActiveTab("info");
       toast.success("Preview updated! Click 'Save' to persist.");
     };
     reader.readAsDataURL(file);

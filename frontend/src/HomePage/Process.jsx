@@ -17,7 +17,7 @@ export default function Process() {
           {[
             {
               step: 1,
-              title: "Sign Up / SSO",
+              title: "Sign Up ",
               desc: "Quick registration with Email",
               icon: "fa-user-plus"
             },

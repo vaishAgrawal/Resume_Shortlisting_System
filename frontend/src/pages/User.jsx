@@ -490,76 +490,84 @@ export default function ResumeAnalyzerDashboard() {
                   <div className="text-[11px] font-bold uppercase tracking-[0.35em] text-violet-300">
                     Process
                   </div>
-                  <h3 className="mt-2 text-3xl sm:text-4xl font-extrabold text-slate-900">
-                    Process section<span className="text-violet-500"></span>
+                  <h3 className="mt-2 text-3xl sm:text-4xl font-extrabold text-[#4c1d95]">
+                    How the User Dashboard Works<span className="text-violet-500">.</span>
                   </h3>
                   <p className="mt-2 text-sm text-slate-500">
-                    A simple 4-step flow to analyze, improve, and download.
+                    A simple 4-step flow to upload, analyze, and improve your resume.
                   </p>
                 </div>
 
-                  <div className="relative mt-10">
-                    <div className="absolute left-0 right-0 top-1/2 h-px bg-violet-200/80 z-0"></div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-                      <div className="relative flex flex-col items-center md:h-[240px]">
-                        <div className="text-sm font-extrabold text-violet-700 md:absolute md:top-1 md:left-1/2 md:-translate-x-16">1.</div>
-                        <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-2 md:left-1/2 md:-translate-x-1/2">
-                          <Upload className="h-7 w-7" />
+                  <div className="relative mt-24">
+                    <div className="absolute left-0 right-0 top-1/2 h-0.5 bg-violet-200/80 z-0"></div>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+                        <div className="relative flex flex-col items-center md:h-[240px]">
+                          <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-[calc(50%+100px)] md:left-1/2 md:-translate-x-1/2">
+                            <span className="absolute -left-7 top-1/2 -translate-y-1/2 text-sm font-extrabold text-violet-900">
+                              1.
+                            </span>
+                            <Upload className="h-7 w-7" />
+                          </div>
+                          <div className="hidden md:block absolute left-1/2 top-[calc(50%-100px)] bottom-1/2 w-0.5 bg-violet-300 z-20"></div>
+                          <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500 z-30"></div>
+                          <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:-translate-y-24 md:translate-x-6 relative z-30">
+                            <div className="text-sm font-bold text-violet-900">Upload Resume</div>
+                            <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
+                              Upload your resume to start the ATS analysis.
+                            </p>
+                          </div>
                         </div>
-                        <div className="hidden md:block absolute left-1/2 top-[72px] bottom-1/2 w-px bg-violet-300 z-20"></div>
-                        <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
-                        <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:-translate-y-10 md:translate-x-6 relative z-30">
-                          <div className="text-sm font-bold text-violet-800">Upload & Target</div>
-                          <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
-                            Upload your resume and choose the job role you want to target.
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="relative flex flex-col items-center md:h-[240px]">
-                        <div className="text-sm font-extrabold text-violet-700 md:absolute md:bottom-1 md:left-1/2 md:-translate-x-16">2.</div>
-                        <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-2 md:left-1/2 md:-translate-x-1/2">
-                          <FileText className="h-7 w-7" />
+                        <div className="relative flex flex-col items-center md:h-[240px]">
+                          <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-[calc(50%+100px)] md:left-1/2 md:-translate-x-1/2">
+                            <span className="absolute -left-7 top-1/2 -translate-y-1/2 text-sm font-extrabold text-violet-900">
+                              2.
+                            </span>
+                            <FileText className="h-7 w-7" />
+                          </div>
+                          <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[calc(50%-100px)] w-0.5 bg-violet-300 z-20"></div>
+                          <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500 z-30"></div>
+                          <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:translate-y-2 md:translate-x-6 relative z-30">
+                            <div className="text-sm font-bold text-violet-900">Add Job Description</div>
+                            <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
+                              Paste the JD to improve keyword matching accuracy.
+                            </p>
+                          </div>
                         </div>
-                        <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[72px] w-px bg-violet-300 z-20"></div>
-                        <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
-                        <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:translate-y-6 md:translate-x-6 relative z-30">
-                          <div className="text-sm font-bold text-violet-800">Add Job Description</div>
-                          <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
-                            Paste the JD to improve keyword matching and accuracy.
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="relative flex flex-col items-center md:h-[240px]">
-                        <div className="text-sm font-extrabold text-violet-700 md:absolute md:top-1 md:left-1/2 md:-translate-x-16">3.</div>
-                        <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-2 md:left-1/2 md:-translate-x-1/2">
-                          <BarChart3 className="h-7 w-7" />
+                        <div className="relative flex flex-col items-center md:h-[240px]">
+                          <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-[calc(50%+100px)] md:left-1/2 md:-translate-x-1/2">
+                            <span className="absolute -left-7 top-1/2 -translate-y-1/2 text-sm font-extrabold text-violet-900">
+                              3.
+                            </span>
+                            <BarChart3 className="h-7 w-7" />
+                          </div>
+                          <div className="hidden md:block absolute left-1/2 top-[calc(50%-100px)] bottom-1/2 w-0.5 bg-violet-300 z-20"></div>
+                          <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500 z-30"></div>
+                          <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:-translate-y-24 md:translate-x-6 relative z-30">
+                            <div className="text-sm font-bold text-violet-900">Analyze & Score</div>
+                            <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
+                              Get ATS score, readability, and keyword insights.
+                            </p>
+                          </div>
                         </div>
-                        <div className="hidden md:block absolute left-1/2 top-[72px] bottom-1/2 w-px bg-violet-300 z-20"></div>
-                        <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
-                        <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:-translate-y-10 md:translate-x-6 relative z-30">
-                          <div className="text-sm font-bold text-violet-800">Analyze & Score</div>
-                          <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
-                            We calculate ATS score, readability, and keyword match.
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="relative flex flex-col items-center md:h-[240px]">
-                        <div className="text-sm font-extrabold text-violet-700 md:absolute md:bottom-1 md:left-1/2 md:-translate-x-16">4.</div>
-                        <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:bottom-2 md:left-1/2 md:-translate-x-1/2">
-                          <Award className="h-7 w-7" />
+                        <div className="relative flex flex-col items-center md:h-[240px]">
+                          <div className="mt-2 h-16 w-16 rounded-full bg-[#f4efff] shadow-md border border-violet-200 flex items-center justify-center text-violet-700 relative z-10 md:mt-0 md:absolute md:top-[calc(50%+120px)] md:left-1/2 md:-translate-x-1/2">
+                            <span className="absolute -left-7 top-1/2 -translate-y-1/2 text-sm font-extrabold text-violet-900">
+                              4.
+                            </span>
+                            <Award className="h-7 w-7" />
+                          </div>
+                          <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[calc(50%-120px)] w-0.5 bg-violet-300 z-20"></div>
+                          <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500 z-30"></div>
+                          <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:translate-y-2 md:translate-x-6 relative z-30">
+                            <div className="text-sm font-bold text-violet-900">Improve & Export</div>
+                            <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
+                              Apply AI tips and download your optimized report.
+                            </p>
+                          </div>
                         </div>
-                        <div className="hidden md:block absolute left-1/2 top-1/2 bottom-[72px] w-px bg-violet-300 z-20"></div>
-                        <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-violet-500"></div>
-                        <div className="mt-3 text-center md:text-left md:absolute md:left-1/2 md:top-1/2 md:translate-y-6 md:translate-x-6 relative z-30">
-                          <div className="text-sm font-bold text-violet-800">Improve & Export</div>
-                          <p className="mt-1 text-xs text-violet-500 max-w-[180px]">
-                            Get AI tips and download your optimized report.
-                          </p>
-                        </div>
-                      </div>
                     </div>
                   </div>
               </div>

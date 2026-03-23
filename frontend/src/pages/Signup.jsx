@@ -18,6 +18,7 @@ export default function Signup() {
   const [gradYear, setGradYear] = useState("");
   const [username, setUsername] = useState("");
   const [secretKey, setSecretKey] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const matchState = useMemo(() => {
     if (!password && !confirm) return "idle";
@@ -31,6 +32,9 @@ export default function Signup() {
       alert("Passwords do not match.");
       return;
     }
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     const payload = {
       name: fullName,
@@ -52,6 +56,8 @@ export default function Signup() {
       window.location.href = "/login";
     } catch (err) {
       alert(err.response?.data || "Registration failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -353,9 +359,19 @@ export default function Signup() {
 
             <button
               type="submit"
-              className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] text-white py-3 rounded-lg font-semibold"
+              disabled={isSubmitting}
+              className={`w-full py-3 rounded-lg font-semibold text-white transition ${
+                isSubmitting ? "bg-[#8b5cf6]/70 cursor-not-allowed" : "bg-[#8b5cf6] hover:bg-[#7c3aed]"
+              }`}
             >
-              Create Account
+              {isSubmitting ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 rounded-full border-2 border-white/60 border-t-white animate-spin"></span>
+                  Creating...
+                </span>
+              ) : (
+                "Create Account"
+              )}
             </button>
 
           </form>

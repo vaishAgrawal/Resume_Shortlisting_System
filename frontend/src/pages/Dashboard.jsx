@@ -22,13 +22,14 @@ const CandidateAnalytics = () => {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   
   // Mock Data (Based on your dashboard.html structure)
-  const [candidates, setCandidates] = useState([
+  const initialCandidates = [
     { id: 1, name: "Amit Sharma", position: "Full Stack Developer", score: 92, status: "shortlisted" },
     { id: 2, name: "Sneha Patil", position: "UI/UX Designer", score: 85, status: "pending" },
     { id: 3, name: "Rahul Verma", position: "Data Scientist", score: 78, status: "pending" },
     { id: 4, name: "Priya Singh", position: "MERN Stack Developer", score: 65, status: "rejected" },
     { id: 5, name: "Vikram Raj", position: "Backend Developer", score: 89, status: "shortlisted" },
-  ]);
+  ];
+  const [candidates, setCandidates] = useState(initialCandidates);
 
   // Handle Checkbox Filter
   const handleStatusChange = (status) => {
@@ -56,6 +57,39 @@ const CandidateAnalytics = () => {
     { category: "Certifications", feedback: "Verified.", score: 5, outOf: 5, tone: "good" },
     { category: "Tone/Grammar", feedback: "Professional tone check.", score: 5, outOf: 5, tone: "good" }
   ];
+
+  const handleClearAll = () => {
+    setSearchTerm("");
+    setStatusFilter([]);
+    setSelectedCandidate(null);
+    setCandidates([]);
+  };
+
+  const handleExportData = () => {
+    const rows = filteredCandidates.length > 0 ? filteredCandidates : candidates;
+    const header = ["Name", "Position", "Score", "Status"];
+    const csvRows = [
+      header.join(","),
+      ...rows.map((row) =>
+        [
+          `"${row.name.replace(/"/g, '""')}"`,
+          `"${row.position.replace(/"/g, '""')}"`,
+          row.score,
+          row.status
+        ].join(",")
+      )
+    ];
+
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "candidate_export.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-[#f7f5fb] text-gray-800 font-sans p-4 md:p-8 pt-28 md:pt-32">
@@ -117,6 +151,7 @@ const CandidateAnalytics = () => {
                       <input 
                         type="checkbox" 
                         className="rounded border-[#d7c8ff] bg-white text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                        checked={statusFilter.includes(status)}
                         onChange={() => handleStatusChange(status)}
                       />
                       <span>{status}</span>
@@ -126,10 +161,18 @@ const CandidateAnalytics = () => {
               </div>
               
               <div className="flex flex-col gap-3">
-                <button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition">
+                <button
+                  type="button"
+                  onClick={handleClearAll}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition"
+                >
                   <Trash2 size={16} /> Clear All
                 </button>
-                <button className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-bold py-2 px-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition">
+                <button
+                  type="button"
+                  onClick={handleExportData}
+                  className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-bold py-2 px-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition"
+                >
                   <Download size={16} /> Export Data
                 </button>
               </div>
