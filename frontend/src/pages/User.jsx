@@ -49,6 +49,8 @@ export default function ResumeAnalyzerDashboard() {
   const [remainingCredits, setRemainingCredits] = useState(null);
   const [userPlan, setUserPlan] = useState("FREE");
   
+  console.log("DEBUG: Current Frontend userPlan:", userPlan);
+  
   // Feature States
   const [showPricing, setShowPricing] = useState(false);
   const [historyData, setHistoryData] = useState([]);
@@ -106,6 +108,7 @@ export default function ResumeAnalyzerDashboard() {
 
         const creditRes = await api.get("/user-cv/credits");
         if (creditRes.status === 200) {
+          console.log("DEBUG: Credits API Response:", creditRes.data);
           setRemainingCredits(creditRes.data.atsCreditsRemaining);
           setUserPlan(creditRes.data.plan);
         }
@@ -271,7 +274,11 @@ export default function ResumeAnalyzerDashboard() {
       setHistoryData(res.data);
       setShowHistory(true);
     } catch (err) {
-      alert("Failed to load history.");
+      if (err.response?.status === 403) {
+        setShowPricing(true);
+      } else {
+        alert("Failed to load history.");
+      }
     }
   };
 
@@ -488,10 +495,16 @@ export default function ResumeAnalyzerDashboard() {
                   
                   <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
                     <button 
-                      onClick={() => setShowHistory(true)}
-                      className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"
+                      onClick={fetchHistory}
+                      className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2 relative"
                     >
-                      <History className="h-4 w-4" /> View History
+                      {userPlan === "FREE" ? <Lock className="h-4 w-4 text-slate-400" /> : <History className="h-4 w-4 text-violet-500" />}
+                      <span>View History</span>
+                      {userPlan === "FREE" && (
+                        <span className="absolute -top-2 -right-2 bg-violet-600 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">
+                          PRO
+                        </span>
+                      )}
                     </button>
                     <button 
                       onClick={() => setShowTemplates(true)}
