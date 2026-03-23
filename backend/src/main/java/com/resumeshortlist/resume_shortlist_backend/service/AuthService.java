@@ -1,5 +1,6 @@
 package com.resumeshortlist.resume_shortlist_backend.service;
 
+import com.resumeshortlist.resume_shortlist_backend.dto.AuthResponse;
 import com.resumeshortlist.resume_shortlist_backend.dto.LoginRequest;
 import com.resumeshortlist.resume_shortlist_backend.dto.RegisterRequest;
 import com.resumeshortlist.resume_shortlist_backend.entity.User;
@@ -80,5 +81,26 @@ public class AuthService {
         claims.put("role", user.getRole().name());
 
         return jwtService.generateToken(claims, userDetails);
+    }
+
+    public AuthResponse loginWithoutPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Create UserDetails object to generate the token
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(user.getEmail())
+                .password(user.getPassword())
+                .authorities("ROLE_" + user.getRole().name())
+                .build();
+
+        // Create Claims
+        Map<String, Object> claims = new java.util.HashMap<>();
+        claims.put("role", user.getRole().name());
+
+        // Generate Token
+        String token = jwtService.generateToken(claims, userDetails);
+
+        return new AuthResponse(token, user.getId(), user.getName(), user.getRole().name());
     }
 }

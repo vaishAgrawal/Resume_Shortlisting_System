@@ -3,6 +3,7 @@ package com.resumeshortlist.resume_shortlist_backend.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.resumeshortlist.resume_shortlist_backend.dto.PasswordChangeRequest;
 import com.resumeshortlist.resume_shortlist_backend.dto.ProfileUpdateRequest;
 import com.resumeshortlist.resume_shortlist_backend.dto.UserProfileResponse;
 import com.resumeshortlist.resume_shortlist_backend.entity.User;
@@ -63,16 +64,24 @@ public class ProfileService {
     @Autowired
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
-    public void changePassword(String email, com.resumeshortlist.resume_shortlist_backend.dto.PasswordChangeRequest request) {
+    public void changePassword(String email, PasswordChangeRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found: " + email));
 
-        // Verify current password
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new RuntimeException("Current password is incorrect");
         }
 
-        // Encode and set new password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    // NEW METHOD: Used when a user used OTP to log in and needs to reset
+    public void forceResetPassword(String email, PasswordChangeRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
+
+        // Skip the current password check! Just encode and save the new one.
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
