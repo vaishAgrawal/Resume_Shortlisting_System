@@ -20,6 +20,8 @@ public class AnalysisResultForUser {
     private UserForCv user;
 
     private Integer totalScore;
+    private String targetDomain; // Stores the Job Title scanned for
+    private String resumeFileName; // Stores the original filename analyzed
     
     @Column(columnDefinition = "JSON")
     private String scoreBreakdowns; // Stores Section-wise scores

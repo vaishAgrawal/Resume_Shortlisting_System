@@ -23,6 +23,8 @@ public class SubscriptionForUser {
     private PlanType planType = PlanType.FREE; // FREE, STARTER, PRO
 
     private Integer atsCredits = 5; // Default for FREE
+    
+    // Monthly AI usage tracking
     private Integer aiRewritesUsed = 0;
     private Integer sectionImprovementsUsed = 0;
     

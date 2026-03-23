@@ -134,18 +134,22 @@ const handleSave = async () => {
 
   // 3. CHANGE PASSWORD
   const handlePasswordUpdate = async () => {
+    if (!passwords.new || !passwords.confirm) {
+      toast.error("Please enter a new password.");
+      return;
+    }
     if (passwords.new !== passwords.confirm) {
       toast.error("New passwords do not match!");
       return;
     }
 
     try {
-      await api.put("/auth/profile/password", {
-        currentPassword: passwords.current,
+      // Call the NEW endpoint that forces a reset without needing the old password
+      await api.put("/auth/profile/force-reset-password", {
         newPassword: passwords.new
       });
-      toast.success("Password Updated!");
-      setPasswords({ current: "", new: "", confirm: "" });
+      toast.success("Password Updated Successfully!");
+      setPasswords({ new: "", confirm: "" });
     } catch (err) {
       toast.error(err.response?.data?.error || "Password update failed");
     }
@@ -472,33 +476,19 @@ const handleSave = async () => {
                   </h2>
                 </div>
 
-                {["current", "new", "confirm"].map((field) => (
+                {["new", "confirm"].map((field) => (
                   <div key={field} className="mb-6 relative">
-
-                    <label className="text-xs font-semibold text-indigo-400 uppercase tracking-wider ml-1">
-                      {field} Password
-                    </label>
-
+                    <label className="text-xs font-semibold text-indigo-400 uppercase tracking-wider ml-1">{field} Password</label>
                     <input
                       type={showPassword[field] ? "text" : "password"}
                       value={passwords[field]}
-                      onChange={(e) =>
-                        setPasswords({
-                          ...passwords,
-                          [field]: e.target.value
-                        })
-                      }
+                      onChange={(e) => setPasswords({ ...passwords, [field]: e.target.value })}
+                      placeholder={`Enter ${field} password`}
                       className="w-full bg-transparent border-b border-indigo-100 px-0 py-2 mt-1 text-indigo-900 outline-none"
                     />
-
-                    <button
-                      type="button"
-                      onClick={() => toggleVisibility(field)}
-                      className="absolute right-4 top-12 text-indigo-300 cursor-pointer"
-                    >
+                    <button type="button" onClick={() => toggleVisibility(field)} className="absolute right-4 top-12 text-indigo-300 cursor-pointer">
                       {showPassword[field] ? <FaEyeSlash /> : <FaEye />}
                     </button>
-
                   </div>
                 ))}
 

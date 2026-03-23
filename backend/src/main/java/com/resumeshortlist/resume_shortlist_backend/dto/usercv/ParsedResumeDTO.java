@@ -9,4 +9,9 @@ public class ParsedResumeDTO {
     private int totalYearsExperience;
     private int projectCount;
     private boolean hasCertifications;
+    
+    // NEW: Raw segments for AI Rewriting
+    private String rawSummary;
+    private List<String> rawExperience;
+    private List<String> rawProjects;
 }

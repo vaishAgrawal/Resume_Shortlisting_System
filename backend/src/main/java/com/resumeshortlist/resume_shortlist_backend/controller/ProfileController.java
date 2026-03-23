@@ -2,10 +2,6 @@ package com.resumeshortlist.resume_shortlist_backend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -45,11 +41,23 @@ public class ProfileController {
         }
     }
 
-    @PutMapping("/password")
+   @PutMapping("/password")
     public ResponseEntity<?> changePassword(Principal principal, @RequestBody PasswordChangeRequest request) {
         try {
             profileService.changePassword(principal.getName(), request);
             return ResponseEntity.ok(Collections.singletonMap("message", "Password changed successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+    // NEW ENDPOINT: /auth/profile/force-reset-password
+    @PutMapping("/force-reset-password")
+    public ResponseEntity<?> forceResetPassword(Principal principal, @RequestBody PasswordChangeRequest request) {
+        try {
+            // Because they have a valid JWT token (Principal is not null), we trust they own the account.
+            profileService.forceResetPassword(principal.getName(), request);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Password successfully reset!"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }

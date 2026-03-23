@@ -9,6 +9,7 @@ import com.resumeshortlist.resume_shortlist_backend.service.AuthService;
 import com.resumeshortlist.resume_shortlist_backend.service.OtpService;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +89,44 @@ public class AuthController {
             return ResponseEntity.ok("OTP Verified");
         } else {
             return ResponseEntity.status(HttpStatus.SC_UNAUTHORIZED).body("Invalid or expired OTP");
+        }
+    }
+
+    @PostMapping("/forgot-password/send-otp")
+    public ResponseEntity<?> sendForgotPasswordOtp(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        
+        // Check if user exists BEFORE sending OTP
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No account found with this email."));
+        }
+
+        try {
+            String otp = otpService.generateOtp(email);
+            otpService.sendOtpEmail(email, otp);
+            return ResponseEntity.ok(Map.of("message", "OTP sent to your email."));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to send OTP."));
+        }
+    }
+
+    @PostMapping("/forgot-password/verify-otp")
+    public ResponseEntity<?> verifyForgotPasswordOtp(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String otp = request.get("otp");
+
+        // Verify OTP
+        if (!otpService.validateOtp(email, otp)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired OTP"));
+        }
+
+        try {
+            // Generate token directly (bypassing password)
+            AuthResponse response = authService.loginWithoutPassword(email);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to generate login session."));
         }
     }
 }
