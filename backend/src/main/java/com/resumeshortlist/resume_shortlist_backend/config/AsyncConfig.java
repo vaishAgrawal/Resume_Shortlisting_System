@@ -15,11 +15,11 @@ public class AsyncConfig {
     public Executor parsingTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         // Base number of threads running
-        executor.setCorePoolSize(5); 
+        executor.setCorePoolSize(20); 
         // Max number of concurrent threads (Perfect for your 20 resume limit)
-        executor.setMaxPoolSize(20); 
+        executor.setMaxPoolSize(50); 
         // Queue size if all threads are busy
-        executor.setQueueCapacity(50);
+        executor.setQueueCapacity(100);
         // Name of the threads in your console logs
         executor.setThreadNamePrefix("ResumeParser-");
         executor.initialize();
