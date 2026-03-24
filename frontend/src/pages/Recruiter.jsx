@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 const DOMAIN_OPTIONS = [
   "Sales & Marketing",
@@ -39,28 +40,43 @@ const SKILLS_BY_DOMAIN = {
 
 export default function Recruiter() {
   const navigate = useNavigate();
+  
+  // File & Upload States
   const [resumeFiles, setResumeFiles] = useState([]);
+  const [uploadedResumeIds, setUploadedResumeIds] = useState([]); // Stores backend IDs
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Job Requirement States
   const [domain, setDomain] = useState("");
+  const [jdText, setJdText] = useState(""); 
   const [selectedSkill, setSelectedSkill] = useState("");
   const [skills, setSkills] = useState([]);
+  
+  // Process States
+  const [jobId, setJobId] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [toast, setToast] = useState({ message: "", type: "info" });
-  const [isDragging, setIsDragging] = useState(false);
+
   const maxLimit = 20;
   const remainingResumes = Math.max(0, maxLimit - resumeFiles.length);
+  const userId = localStorage.getItem("userId");
 
   const availableSkills = useMemo(() => {
     if (!domain) return [];
     return SKILLS_BY_DOMAIN[domain] || [];
   }, [domain]);
 
+  const showToast = (message, type = "info") => {
+    setToast({ message, type });
+    window.setTimeout(() => setToast({ message: "", type: "info" }), 3500);
+  };
+
   const mergeFiles = (currentFiles, incomingFiles) => {
     const map = new Map();
-    currentFiles.forEach((file) => {
-      map.set(`${file.name}-${file.size}-${file.lastModified}`, file);
-    });
-    incomingFiles.forEach((file) => {
-      map.set(`${file.name}-${file.size}-${file.lastModified}`, file);
-    });
+    currentFiles.forEach((file) => map.set(`${file.name}-${file.size}`, file));
+    incomingFiles.forEach((file) => map.set(`${file.name}-${file.size}`, file));
     return Array.from(map.values());
   };
 
@@ -69,7 +85,7 @@ export default function Recruiter() {
     if (files.length === 0) return;
     const merged = mergeFiles(resumeFiles, files);
     if (merged.length > maxLimit) {
-      showToast(`You can only upload ${maxLimit} resumes.`, "error");
+      showToast(`Max ${maxLimit} resumes allowed.`, "error");
       event.target.value = "";
       return;
     }
@@ -84,72 +100,103 @@ export default function Recruiter() {
     if (files.length === 0) return;
     const merged = mergeFiles(resumeFiles, files);
     if (merged.length > maxLimit) {
-      showToast(`You can only upload ${maxLimit} resumes.`, "error");
+      showToast(`Max ${maxLimit} resumes allowed.`, "error");
       return;
     }
     setResumeFiles(merged);
   };
 
   const removeResumeFile = (fileToRemove) => {
-    setResumeFiles((prev) =>
-      prev.filter(
-        (file) =>
-          !(
-            file.name === fileToRemove.name &&
-            file.size === fileToRemove.size &&
-            file.lastModified === fileToRemove.lastModified
-          )
-      )
-    );
+    setResumeFiles((prev) => prev.filter((file) => !(file.name === fileToRemove.name && file.size === fileToRemove.size)));
+  };
+
+  // --- 1. UPLOAD RESUMES ---
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (resumeFiles.length === 0) return showToast("Select files first", "error");
+    
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      resumeFiles.forEach(file => formData.append("files", file));
+      
+      const res = await api.post(`/resumes/upload/${userId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
+      const ids = res.data.map(resume => resume.id);
+      setUploadedResumeIds(ids);
+      showToast("Resumes uploaded and data extracted successfully!", "success");
+    } catch (err) {
+      showToast("Upload failed. Try again.", "error");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // --- 2. SAVE REQUIREMENTS ---
+  const handleSaveRequirements = async () => {
+    if (!domain) return showToast("Please select a Job Domain.", "error");
+    if (!jdText.trim()) return showToast("Please paste a Job Description.", "error");
+    if (skills.length === 0) return showToast("Please add at least one Required Skill.", "error");
+    
+    setIsSaving(true);
+    try {
+      const res = await api.post(`/job-postings/domain-skills?userId=${userId}`, {
+        jobDomain: domain,
+        jdText: jdText.trim(),
+        skills: skills
+      });
+      setJobId(res.data.jobId);
+      showToast("Requirements saved successfully!", "success");
+    } catch(e) {
+      showToast("Failed to save requirements.", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // --- 3. ANALYZE CANDIDATES ---
+  const handleAnalyzeCandidates = async () => {
+    if (uploadedResumeIds.length === 0) return showToast("Please Upload Resumes first.", "error");
+    if (!jobId) return showToast("Please Save Requirements first.", "error");
+    
+    setIsAnalyzing(true);
+    try {
+      await api.post(`/score/by-resumes/${jobId}`, uploadedResumeIds);
+      showToast("Analysis complete! Redirecting...", "success");
+      setTimeout(() => {
+        navigate("/dashboard", { state: { jobId } });
+      }, 1500);
+    } catch(e) {
+      showToast(e.response?.data?.error || "Analysis failed.", "error");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const addSkill = () => {
     if (!selectedSkill || selectedSkill === "__all__") return;
-    if (!skills.includes(selectedSkill)) {
-      setSkills((prev) => [...prev, selectedSkill]);
-    }
+    if (!skills.includes(selectedSkill)) setSkills((prev) => [...prev, selectedSkill]);
     setSelectedSkill("");
   };
 
   const selectAllSkills = () => {
-    if (!domain) {
-      showToast("Please select a job domain first.", "error");
-      return;
-    }
+    if (!domain) return showToast("Select a domain first.", "error");
     setSkills(availableSkills);
     setSelectedSkill("__all__");
   };
 
-  const removeSkill = (skill) => {
-    setSkills((prev) => prev.filter((s) => s !== skill));
-  };
+  const removeSkill = (skill) => setSkills((prev) => prev.filter((s) => s !== skill));
 
   const clearAll = () => {
     setResumeFiles([]);
+    setUploadedResumeIds([]);
     setDomain("");
+    setJdText("");
     setSkills([]);
     setSelectedSkill("");
-  };
-
-  const showToast = (message, type = "info") => {
-    setToast({ message, type });
-    window.setTimeout(() => setToast({ message: "", type: "info" }), 2500);
-  };
-
-  const handleAnalyzeCandidates = () => {
-    if (resumeFiles.length === 0 && !domain) {
-      showToast("Please upload at least one resume and select a job domain first.", "error");
-      return;
-    }
-    if (resumeFiles.length === 0) {
-      showToast("Please upload at least one resume first.", "error");
-      return;
-    }
-    if (!domain) {
-      showToast("Please select a job domain first.", "error");
-      return;
-    }
-    navigate("/dashboard");
+    setJobId(null);
   };
 
   return (
@@ -192,205 +239,121 @@ export default function Recruiter() {
 
             <div className="grid lg:grid-cols-2 gap-16 items-start lg:items-stretch">
               <div className="space-y-8 flex flex-col items-center lg:items-stretch">
-              {/* Upload Resumes */}
-              <section className="w-full max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8 lg:h-full">
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-slate-900">Upload Resumes</h2>
+              {/* UPLOAD SECTION */}
+              <div className="space-y-8 flex flex-col items-center lg:items-stretch">
+                <section className="w-full max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-xl p-8 lg:h-full">
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-bold text-slate-900">Upload Resumes</h2>
+                      {uploadedResumeIds.length > 0 && (
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Uploaded & Extracted</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-500">Select up to <span className="font-semibold text-violet-600">{remainingResumes}</span> resumes (PDF, DOCX).</p>
+
+                    <label
+                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={onDropResumes}
+                      className={`group block border-2 border-dashed rounded-[2rem] p-10 text-center transition-all ${isDragging ? "border-violet-500 bg-violet-100/60" : "border-violet-200 hover:border-violet-400 hover:bg-violet-50/40"}`}
+                    >
+                      <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 group-hover:scale-110 transition-transform">
+                        <i className="fas fa-cloud-upload-alt text-2xl"></i>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Drop resumes here or choose files.</h3>
+                      <input type="file" multiple accept=".pdf,.doc,.docx" className="hidden" onChange={onResumeChange} disabled={uploadedResumeIds.length > 0}/>
+                      
+                      {uploadedResumeIds.length === 0 ? (
+                        <button 
+                          onClick={handleUpload}
+                          disabled={isUploading || resumeFiles.length === 0}
+                          className={`inline-flex items-center justify-center rounded-2xl px-8 py-3 text-sm font-bold text-white shadow-xl transition-all ${resumeFiles.length === 0 ? 'bg-slate-300' : 'bg-violet-600 hover:bg-violet-700 active:scale-95'}`}
+                        >
+                          {isUploading ? <><i className="fas fa-spinner fa-spin mr-2"></i> Extracting...</> : "Upload Resumes"}
+                        </button>
+                      ) : (
+                        <div className="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-8 py-3 text-sm font-bold text-white shadow-xl">
+                          <i className="fas fa-check-circle mr-2"></i> Ready for Analysis
+                        </div>
+                      )}
+                    </label>
+
                     {resumeFiles.length > 0 && (
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                        Uploaded
-                      </span>
+                      <div className="max-h-40 overflow-y-auto space-y-2 text-sm text-slate-600">
+                        {resumeFiles.map((file) => (
+                          <div key={`${file.name}-${file.size}`} className="flex items-center justify-between gap-3 bg-violet-50/60 p-2 rounded-lg">
+                            <span className="truncate">{file.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-400 text-xs">{(file.size / 1024).toFixed(1)} KB</span>
+                              {uploadedResumeIds.length === 0 && (
+                                <button type="button" onClick={() => removeResumeFile(file)} className="h-7 w-7 rounded-full bg-white text-violet-500 hover:bg-violet-100 transition">×</button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  <p className="text-sm text-slate-500">
-                    Select up to{" "}
-                    <span className="font-semibold text-violet-600">
-                      {remainingResumes}
-                    </span>{" "}
-                    resumes (PDF, DOC, DOCX) for a single account.
-                  </p>
-
-                  <label
-                    onDragOver={(event) => {
-                      event.preventDefault();
-                      setIsDragging(true);
-                    }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={onDropResumes}
-                    className={`group block border-2 border-dashed rounded-[2rem] p-10 text-center cursor-pointer transition-all duration-300 ${
-                      isDragging
-                        ? "border-violet-500 bg-violet-100/60"
-                        : "border-violet-200 hover:border-violet-400 hover:bg-violet-50/40"
-                    }`}
-                  >
-                    <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 group-hover:scale-110 transition-transform">
-                      <i className="fas fa-cloud-upload-alt text-2xl"></i>
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Drop resumes here or choose files.</h3>
-                    <p className="text-sm text-slate-500 mb-6">PDF & DOCX only. Max 20 files.</p>
-                    <p className="text-xs text-slate-400 mb-4">You can select multiple files or drag and drop them here.</p>
-                    <input
-                      type="file"
-                      multiple
-                      accept=".pdf,.doc,.docx"
-                      className="hidden"
-                      onChange={onResumeChange}
-                    />
-                    <div className="inline-flex items-center justify-center rounded-2xl bg-violet-600 px-8 py-3 text-sm font-bold text-white shadow-xl shadow-violet-200 hover:bg-violet-700 hover:-translate-y-0.5 transition-all active:scale-95">
-                      Upload Resumes
-                    </div>
-                  </label>
-
-                  {resumeFiles.length > 0 && (
-                    <div className="max-h-40 overflow-y-auto space-y-2 text-sm text-slate-600">
-                      {resumeFiles.map((file) => (
-                        <div
-                          key={`${file.name}-${file.size}-${file.lastModified}`}
-                          className="flex items-center justify-between gap-3 bg-violet-50/60 p-2 rounded-lg"
-                        >
-                          <span className="truncate">{file.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-400 text-xs">
-                              {(file.size / 1024).toFixed(1)} KB
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => removeResumeFile(file)}
-                              aria-label={`Remove ${file.name}`}
-                              className="h-7 w-7 rounded-full border border-violet-200 bg-white text-violet-500 hover:bg-violet-100 hover:text-violet-700 transition"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </section>
+                </section>
+              </div>
 
             </div>
 
+              {/* JD & SKILLS SECTION */}
               <div className="hidden lg:flex self-start w-full justify-center items-stretch">
-                <section className="w-full max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-[0_25px_80px_-55px_rgba(124,58,237,0.45)] p-8 lg:h-full lg:min-h-[520px]">
+                <section className="w-full max-w-xl rounded-3xl border border-violet-200/60 bg-white/70 backdrop-blur-xl shadow-xl p-8 lg:h-full lg:min-h-[520px]">
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-lg font-bold text-slate-900">Find Your Perfect Match</h2>
-                      <p className="text-sm text-slate-500 mt-2">
-                        Select a Job Domain and Required Skills to find the best candidates.
-                      </p>
+                      <p className="text-sm text-slate-500 mt-2">Add Job Description and Skills to find the best candidates.</p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Job Domain
-                      </label>
-                      <div className="relative">
-                        <select
-                          value={domain}
-                          onChange={(e) => {
-                            setDomain(e.target.value);
-                            setSkills([]);
-                          }}
-                          className="w-full rounded-xl border border-violet-200 bg-white/90 px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
-                        >
-                          <option value="" disabled>
-                            Select Domain
-                          </option>
-                          {DOMAIN_OPTIONS.map((option) => (
-                            <option key={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Job Description</label>
+                      <textarea
+                        value={jdText}
+                        onChange={(e) => setJdText(e.target.value)}
+                        placeholder="Paste the full job description here..."
+                        className="w-full h-32 rounded-xl border border-violet-200 bg-white/90 px-4 py-3 text-sm text-slate-700 focus:ring-2 focus:ring-violet-400 resize-none outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Job Domain</label>
+                      <select value={domain} onChange={(e) => { setDomain(e.target.value); setSkills([]); }} className="w-full rounded-xl border border-violet-200 bg-white/90 px-4 py-3 text-slate-700 focus:ring-2 focus:ring-violet-400 outline-none">
+                        <option value="" disabled>Select Domain</option>
+                        {DOMAIN_OPTIONS.map((opt) => <option key={opt}>{opt}</option>)}
+                      </select>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-semibold text-slate-700">
-                          Required Skills
-                        </label>
-                        {domain &&
-                        availableSkills.length > 0 &&
-                        skills.length === availableSkills.length ? (
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                            All Selected
-                          </span>
-                        ) : null}
+                        <label className="block text-sm font-semibold text-slate-700">Required Skills</label>
                       </div>
                       <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <select
-                            value={selectedSkill}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === "__all__") {
-                                selectAllSkills();
-                                return;
-                              }
-                              setSelectedSkill(value);
-                            }}
-                            className={`w-full rounded-xl border border-violet-200 px-4 py-3 text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 ${
-                              selectedSkill === "__all__" ? "bg-violet-100/70" : "bg-white/90"
-                            }`}
-                          >
-                            <option value="" disabled>
-                              Select a Skill
-                            </option>
-                            <option value="__all__">Select All </option>
-                            {availableSkills.map((skill) => (
-                              <option key={skill} value={skill}>
-                                {skill}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <button
-                          onClick={addSkill}
-                          type="button"
-                          className="px-5 py-3 rounded-xl bg-violet-100 text-violet-700 font-bold hover:bg-violet-200 transition"
-                        >
-                          Add
-                        </button>
+                        <select value={selectedSkill} onChange={(e) => { e.target.value === "__all__" ? selectAllSkills() : setSelectedSkill(e.target.value) }} className="w-full flex-1 rounded-xl border border-violet-200 px-4 py-3 text-slate-700 focus:ring-2 focus:ring-violet-400 outline-none">
+                          <option value="" disabled>Select a Skill</option>
+                          <option value="__all__">Select All</option>
+                          {availableSkills.map((skill) => <option key={skill} value={skill}>{skill}</option>)}
+                        </select>
+                        <button onClick={addSkill} type="button" className="px-5 py-3 rounded-xl bg-violet-100 text-violet-700 font-bold hover:bg-violet-200 transition">Add</button>
                       </div>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {skills.map((skill) => (
-                          <button
-                            key={skill}
-                            onClick={() => removeSkill(skill)}
-                            className="px-3 py-1.5 rounded-full bg-violet-50 text-xs font-semibold text-violet-600 border border-violet-200 hover:border-violet-400 transition"
-                            type="button"
-                          >
+                          <button key={skill} onClick={() => removeSkill(skill)} type="button" className="px-3 py-1.5 rounded-full bg-violet-50 text-xs font-semibold text-violet-600 border border-violet-200 hover:border-violet-400 transition">
                             {skill} <span className="ml-1 text-violet-400">x</span>
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap justify-end gap-3">
-                      <button
-                        id="clearAllBtn"
-                        type="button"
-                        aria-label="Clear all inputs"
-                        onClick={clearAll}
-                        className="px-5 py-3 rounded-xl border border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-50 transition"
-                      >
-                        Clear All
+                    <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-violet-100">
+                      <button onClick={clearAll} type="button" className="px-5 py-3 rounded-xl border border-slate-200 bg-white text-slate-600 font-bold hover:bg-slate-50 transition">Clear All</button>
+                      <button onClick={handleSaveRequirements} disabled={isSaving} type="button" className="px-5 py-3 rounded-xl bg-violet-100 text-violet-700 font-bold hover:bg-violet-200 transition">
+                        {isSaving ? <i className="fas fa-spinner fa-spin"></i> : "Save Requirements"}
                       </button>
-                      <button
-                        onClick={() => alert("Requirements saved (frontend only).")}
-                        className="px-5 py-3 rounded-xl bg-violet-100 text-violet-700 font-bold hover:bg-violet-200 transition"
-                        type="button"
-                      >
-                        Save Requirements
-                      </button>
-                      <button
-                        id="analyzeFinalBtn"
-                        onClick={handleAnalyzeCandidates}
-                        className="px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-violet-200 bg-violet-600 text-white hover:bg-violet-700"
-                        type="button"
-                      >
-                        Analyze Candidates
+                      <button onClick={handleAnalyzeCandidates} disabled={isAnalyzing} type="button" className="px-6 py-3 rounded-xl font-bold transition shadow-lg bg-violet-600 text-white hover:bg-violet-700">
+                        {isAnalyzing ? <><i className="fas fa-spinner fa-spin mr-2"></i>Scoring...</> : "Analyze Candidates"}
                       </button>
                     </div>
                   </div>

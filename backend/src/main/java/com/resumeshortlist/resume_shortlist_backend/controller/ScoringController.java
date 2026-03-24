@@ -4,6 +4,8 @@ import com.resumeshortlist.resume_shortlist_backend.dto.DashboardResponse;
 import com.resumeshortlist.resume_shortlist_backend.entity.ScoreBreakdown;
 import com.resumeshortlist.resume_shortlist_backend.repository.CandidateScoreRepository;
 import com.resumeshortlist.resume_shortlist_backend.service.ScoringService;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +24,29 @@ public class ScoringController {
     public ScoringController(ScoringService scoringService, CandidateScoreRepository scoreRepo) {
         this.scoringService = scoringService;
         this.scoreRepo = scoreRepo;
+    }
+
+    @Autowired
+    private com.resumeshortlist.resume_shortlist_backend.repository.CandidateRepository candidateRepository;
+
+    @PostMapping("/score/by-resumes/{jobId}")
+    public ResponseEntity<?> scoreByResumes(@PathVariable Long jobId, @RequestBody List<Long> resumeIds) {
+        try {
+            // Find candidates linked to the newly uploaded resumes
+            List<com.resumeshortlist.resume_shortlist_backend.entity.Candidate> candidates = candidateRepository.findByResumeIdIn(resumeIds);
+            
+            if(candidates.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No candidates found for these resumes. Please wait a moment for extraction to complete."));
+            }
+
+            for (com.resumeshortlist.resume_shortlist_backend.entity.Candidate cand : candidates) {
+                scoringService.calculateAndSaveScore(cand.getId(), jobId);
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Scoring completed successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to trigger scoring: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/score/{jobId}")

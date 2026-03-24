@@ -39,10 +39,10 @@ public class JobPostingService {
      * Convenience method to create a basic job posting and attach required skills.
      * This is used by the recruiter "Find Your Perfect Match" flow.
      */
-    public JobPosting createJobPostingWithSkills(String title, Long userId, java.util.List<String> skills) {
+    public JobPosting createJobPostingWithSkills(String title, String description, Long userId, java.util.List<String> skills) {
         JobPosting jobPosting = new JobPosting();
         jobPosting.setTitle(title);
-        jobPosting.setDescription("Created from recruiter domain/skills selection");
+        jobPosting.setDescription(description); // Set the custom Job Description
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));

@@ -1,44 +1,59 @@
-
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
-  Users, 
-  CheckCircle, 
-  TrendingUp, 
-  Search, 
-  Download, 
-  Trash2, 
-  Filter, 
-  ChevronRight,
-  Frown,
-  Star,
-  XCircle,
-  BarChart2
+  Users, CheckCircle, TrendingUp, Search, Download, Trash2, Filter, 
+  ChevronRight, Frown, Star, XCircle, BarChart2 
 } from 'lucide-react';
+import api from '../api/axios'; // Ensure your axios instance is imported
 
 const CandidateAnalytics = () => {
-  // State for Filters
+  const location = useLocation();
+  const navigate = useNavigate();
+  const jobId = location.state?.jobId; // Grab jobId passed from Recruiter page
+  const userId = localStorage.getItem("userId");
+
+  // State for Candidates and UI
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
-  
-  // Mock Data (Based on your dashboard.html structure)
-  const initialCandidates = [
-    { id: 1, name: "Amit Sharma", position: "Full Stack Developer", score: 92, status: "shortlisted" },
-    { id: 2, name: "Sneha Patil", position: "UI/UX Designer", score: 85, status: "pending" },
-    { id: 3, name: "Rahul Verma", position: "Data Scientist", score: 78, status: "pending" },
-    { id: 4, name: "Priya Singh", position: "MERN Stack Developer", score: 65, status: "rejected" },
-    { id: 5, name: "Vikram Raj", position: "Backend Developer", score: 89, status: "shortlisted" },
-  ];
-  const [candidates, setCandidates] = useState(initialCandidates);
 
-  // Handle Checkbox Filter
-  const handleStatusChange = (status) => {
-    setStatusFilter(prev => 
-      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
-    );
+  useEffect(() => {
+    if (!jobId) {
+      // If someone navigates to /dashboard directly without a job, redirect them
+      navigate("/recruiter");
+      return;
+    }
+    fetchDashboardData();
+  }, [jobId]);
+
+  const fetchDashboardData = async () => {
+    try {
+      const res = await api.get(`/dashboard/${jobId}`);
+      // Map backend DashboardResponse to Frontend structure
+      const mappedData = res.data.map(item => ({
+        id: item.id,
+        name: item.candidateName || "Unknown Candidate",
+        email: item.email || "No Email",
+        position: item.fileName || "Uploaded Resume", 
+        score: item.totalScore || 0,
+        status: item.status?.toLowerCase() || "pending",
+        rawBreakdown: item.breakdown || []
+      }));
+      setCandidates(mappedData);
+    } catch (err) {
+      console.error("Failed to load dashboard:", err);
+      alert("Failed to load candidate analytics.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Filter Logic
+  const handleStatusChange = (status) => {
+    setStatusFilter(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]);
+  };
+
   const filteredCandidates = candidates.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           c.position.toLowerCase().includes(searchTerm.toLowerCase());
@@ -46,56 +61,58 @@ const CandidateAnalytics = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const breakdownTemplate = [
-    { category: "Format", feedback: "Excellent.", score: 15, outOf: 15, tone: "good" },
-    { category: "Contact", feedback: "Complete.", score: 5, outOf: 5, tone: "good" },
-    { category: "Summary", feedback: "Profile overview check.", score: 10, outOf: 10, tone: "good" },
-    { category: "Skills", feedback: "Add skills to improve matching.", score: 0, outOf: 15, tone: "warn" },
-    { category: "Experience", feedback: "Add quantified achievements (numbers/%).", score: 10, outOf: 20, tone: "warn" },
-    { category: "Projects", feedback: "Good projects.", score: 15, outOf: 15, tone: "good" },
-    { category: "Education", feedback: "Verified.", score: 10, outOf: 10, tone: "good" },
-    { category: "Certifications", feedback: "Verified.", score: 5, outOf: 5, tone: "good" },
-    { category: "Tone/Grammar", feedback: "Professional tone check.", score: 5, outOf: 5, tone: "good" }
-  ];
-
-  const handleClearAll = () => {
-    setSearchTerm("");
-    setStatusFilter([]);
-    setSelectedCandidate(null);
-    setCandidates([]);
+  const handleClearAll = async () => {
+    try {
+      await api.delete(`/cleanup/user-data/${userId}`);
+      setCandidates([]);
+      navigate("/recruiter");
+    } catch (err) {
+      alert("Failed to clear data.");
+    }
   };
 
-  const handleExportData = () => {
-    const rows = filteredCandidates.length > 0 ? filteredCandidates : candidates;
-    const header = ["Name", "Position", "Score", "Status"];
-    const csvRows = [
-      header.join(","),
-      ...rows.map((row) =>
-        [
-          `"${row.name.replace(/"/g, '""')}"`,
-          `"${row.position.replace(/"/g, '""')}"`,
-          row.score,
-          row.status
-        ].join(",")
-      )
-    ];
-
-    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "candidate_export.csv";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleExportData = async () => {
+    if (!jobId) return;
+    try {
+      const res = await api.get(`/candidates/shortlisted/csv?jobId=${jobId}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'shortlisted_candidates.csv');
+      document.body.appendChild(link);
+      link.click();
+    } catch (err) {
+      alert("Failed to export data.");
+    }
   };
+
+  // Maps backend ScoreBreakdown entity to UI UI template
+  const getMappedBreakdown = (rawBreakdowns) => {
+    if (!rawBreakdowns || rawBreakdowns.length === 0) return [];
+    return rawBreakdowns.map(b => {
+      const ratio = b.maxScore > 0 ? b.score / b.maxScore : 0;
+      return {
+        category: b.category,
+        feedback: b.feedback || "Verified.",
+        score: b.score,
+        outOf: b.maxScore,
+        tone: ratio >= 0.7 ? "good" : "warn"
+      };
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f7f5fb] flex items-center justify-center flex-col gap-4">
+        <i className="fas fa-circle-notch fa-spin text-5xl text-[#8b5cf6]"></i>
+        <h2 className="text-xl font-bold text-gray-700">Loading Analytics...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f7f5fb] text-gray-800 font-sans p-4 md:p-8 pt-28 md:pt-32">
       <div className="max-w-7xl mx-auto">
-        
-        {/* Page Title */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-[#8b5cf6] to-[#6d28d9] bg-clip-text text-transparent tracking-tight">
             AI Candidate Analytics
@@ -105,7 +122,6 @@ const CandidateAnalytics = () => {
           </p>
         </div>
 
-        {/* Stats Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 bg-white rounded-2xl shadow-xl border border-[#e7ddff] mb-10 divide-y md:divide-y-0 md:divide-x divide-[#efe7ff]">
           <div className="p-6 text-center hover:bg-[#f1ebff] transition">
             <p className="text-sm font-medium text-gray-500">Total Candidates</p>
@@ -119,13 +135,15 @@ const CandidateAnalytics = () => {
           </div>
           <div className="p-6 text-center hover:bg-[#f1ebff] transition">
             <p className="text-sm font-medium text-gray-500">Avg. Match Score</p>
-            <p className="text-3xl font-extrabold text-amber-500 mt-1">75.5</p>
+            <p className="text-3xl font-extrabold text-amber-500 mt-1">
+              {candidates.length > 0 
+                ? (candidates.reduce((acc, c) => acc + c.score, 0) / candidates.length).toFixed(1) 
+                : 0}
+            </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Sidebar Filter */}
           <aside className="lg:col-span-3">
             <div className="bg-white p-6 rounded-2xl shadow-lg border border-[#e7ddff] sticky top-24 space-y-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b border-[#efe7ff] pb-2 flex items-center gap-2">
@@ -176,12 +194,9 @@ const CandidateAnalytics = () => {
                   <Download size={16} /> Export Data
                 </button>
               </div>
-              
-              
             </div>
           </aside>
 
-          {/* Candidate List Grid */}
           <div className="lg:col-span-9">
             {filteredCandidates.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -192,22 +207,16 @@ const CandidateAnalytics = () => {
                       candidate.status === 'shortlisted' ? 'border-[#a78bfa] shadow-[#8b5cf6]/10' : 'border-transparent hover:border-[#8b5cf6]/40'
                     }`}
                     onClick={() => setSelectedCandidate(candidate)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        setSelectedCandidate(candidate);
-                      }
-                    }}
                   >
                     <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="text-xl font-bold text-gray-900">{candidate.name}</h4>
-                        <div className="text-sm text-gray-500 font-medium">{candidate.position}</div>
+                      <div className="w-[70%]">
+                        <h4 className="text-xl font-bold text-gray-900 truncate" title={candidate.name}>{candidate.name}</h4>
+                        <div className="text-sm text-gray-500 font-medium truncate" title={candidate.position}>{candidate.position}</div>
                       </div>
                       <div className="flex flex-col items-end">
                         <div className={`px-3 py-1 rounded-full text-sm font-bold shadow-md ${
-                          candidate.score >= 80 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                          candidate.score >= 80 ? 'bg-emerald-100 text-emerald-700' : 
+                          candidate.score >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
                         }`}>
                           {candidate.score}%
                         </div>
@@ -219,7 +228,7 @@ const CandidateAnalytics = () => {
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-500">Status:</span>
                         <span className={`text-sm font-semibold capitalize ${
-                          candidate.status === 'shortlisted' ? 'text-green-400' : 
+                          candidate.status === 'shortlisted' ? 'text-green-500' : 
                           candidate.status === 'rejected' ? 'text-red-500' : 'text-[#8b5cf6]'
                         }`}>
                           {candidate.status}
@@ -239,7 +248,6 @@ const CandidateAnalytics = () => {
               </div>
             )}
           </div>
-          
         </div>
       </div>
 
@@ -247,14 +255,15 @@ const CandidateAnalytics = () => {
         <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-[#e7ddff] overflow-hidden">
             <div className="flex items-start justify-between p-6 md:p-8 bg-gradient-to-r from-[#f3e8ff] to-[#ede9fe] border-b border-[#efe7ff]">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+              <div className="w-3/4">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 truncate" title={selectedCandidate.name}>
                   {selectedCandidate.name}
                 </h2>
-                <p className="text-sm text-gray-600 mt-1">{selectedCandidate.position}</p>
+                <p className="text-sm text-gray-600 mt-1 truncate">{selectedCandidate.position}</p>
+                <p className="text-xs text-gray-400 mt-1">{selectedCandidate.email}</p>
               </div>
               <div className="text-right">
-                <div className="text-4xl font-extrabold text-[#7c3aed]">
+                <div className={`text-4xl font-extrabold ${selectedCandidate.score >= 80 ? 'text-emerald-500' : selectedCandidate.score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
                   {selectedCandidate.score}
                 </div>
                 <div className="text-xs uppercase tracking-widest text-gray-500">Total Score</div>
@@ -262,26 +271,17 @@ const CandidateAnalytics = () => {
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto">
-              <div className="grid grid-cols-12 gap-3 px-6 md:px-8 py-3 text-xs uppercase tracking-widest text-gray-500 border-b border-[#efe7ff]">
+              <div className="grid grid-cols-12 gap-3 px-6 md:px-8 py-3 text-xs uppercase tracking-widest text-gray-500 border-b border-[#efe7ff] sticky top-0 bg-white">
                 <div className="col-span-4">Category</div>
                 <div className="col-span-6">Feedback & Improvements</div>
                 <div className="col-span-2 text-right">Score</div>
               </div>
 
-              {breakdownTemplate.map((row) => (
-                <div
-                  key={row.category}
-                  className="grid grid-cols-12 gap-3 px-6 md:px-8 py-4 border-b border-[#f1ebff] last:border-b-0"
-                >
+              {getMappedBreakdown(selectedCandidate.rawBreakdown).map((row, idx) => (
+                <div key={idx} className="grid grid-cols-12 gap-3 px-6 md:px-8 py-4 border-b border-[#f1ebff] last:border-b-0">
                   <div className="col-span-4 font-semibold text-gray-800">{row.category}</div>
                   <div className="col-span-6 text-sm">
-                    <span
-                      className={
-                        row.tone === "good"
-                          ? "text-emerald-600 font-medium"
-                          : "text-amber-600 font-medium"
-                      }
-                    >
+                    <span className={row.tone === "good" ? "text-emerald-600 font-medium" : "text-amber-600 font-medium"}>
                       {row.feedback}
                     </span>
                   </div>
@@ -291,6 +291,10 @@ const CandidateAnalytics = () => {
                   </div>
                 </div>
               ))}
+              
+              {(!selectedCandidate.rawBreakdown || selectedCandidate.rawBreakdown.length === 0) && (
+                 <div className="text-center py-10 text-gray-500">No score breakdown available.</div>
+              )}
             </div>
 
             <div className="flex justify-end p-6 md:p-8 bg-[#faf7ff] border-t border-[#efe7ff]">

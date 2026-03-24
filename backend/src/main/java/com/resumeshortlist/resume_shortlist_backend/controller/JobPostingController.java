@@ -92,7 +92,6 @@ public class JobPostingController {
         }
     }
 
-    // RECRUITER creates job using domain + skills
     @PreAuthorize("hasRole('RECRUITER')")
     @PostMapping("/domain-skills")
     public ResponseEntity<?> createJobFromDomainAndSkills(
@@ -100,31 +99,28 @@ public class JobPostingController {
             @RequestBody Map<String, Object> payload
     ) {
         try {
-
             String title = (String) payload.getOrDefault("jobDomain", "Job");
+            // NEW: Extract JD Text
+            String jdText = (String) payload.getOrDefault("jdText", "Created from recruiter domain/skills selection");
             Object rawSkills = payload.get("skills");
 
             List<String> skills = new ArrayList<>();
-
             if (rawSkills instanceof List<?>) {
                 for (Object o : (List<?>) rawSkills) {
-                    if (o != null) {
-                        skills.add(o.toString());
-                    }
+                    if (o != null) skills.add(o.toString());
                 }
             }
 
-            JobPosting job = jobPostingService.createJobPostingWithSkills(title, userId, skills);
+            // Pass jdText to the service
+            JobPosting job = jobPostingService.createJobPostingWithSkills(title, jdText, userId, skills);
 
             return ResponseEntity.ok(Map.of(
                     "jobId", job.getId(),
                     "title", job.getTitle(),
                     "skillCount", skills.size()
             ));
-
         } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body("Failed to create job with skills: " + e.getMessage());
+            return ResponseEntity.status(500).body("Failed to create job: " + e.getMessage());
         }
     }
 
