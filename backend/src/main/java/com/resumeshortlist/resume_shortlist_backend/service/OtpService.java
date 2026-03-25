@@ -32,6 +32,7 @@ public class OtpService {
 
     public void sendOtpEmail(String toEmail, String otp) {
         SimpleMailMessage message = new SimpleMailMessage();
+        // message.setFrom("ayushdby902@gmail.com"); Use when using bravo email service
         message.setTo(toEmail);
         message.setSubject("Your Login OTP - Resume Shortlist V2");
         message.setText("Your OTP for logging in is: " + otp + "\nThis code will expire in 5 minutes.");
