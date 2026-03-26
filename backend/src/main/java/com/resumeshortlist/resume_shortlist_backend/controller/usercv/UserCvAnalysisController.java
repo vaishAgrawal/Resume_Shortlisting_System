@@ -11,9 +11,9 @@ import com.resumeshortlist.resume_shortlist_backend.service.usercv.UserCvPdfServ
 import com.resumeshortlist.resume_shortlist_backend.service.usercv.UserSubscriptionService;
 import com.resumeshortlist.resume_shortlist_backend.service.usercv.UserCvTemplateService;
 import com.resumeshortlist.resume_shortlist_backend.service.usercv.UserCvRewriteService;
-import lombok.RequiredArgsConstructor;
+
 import org.apache.tika.Tika;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

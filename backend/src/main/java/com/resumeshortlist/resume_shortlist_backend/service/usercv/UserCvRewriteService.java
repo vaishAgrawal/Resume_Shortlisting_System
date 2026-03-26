@@ -9,7 +9,7 @@ import com.resumeshortlist.resume_shortlist_backend.entity.usercv.UserForCv;
 import com.resumeshortlist.resume_shortlist_backend.repository.usercv.SubscriptionForUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.Map;
+
 
 @Service
 @RequiredArgsConstructor

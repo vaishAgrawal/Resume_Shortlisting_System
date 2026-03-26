@@ -7,7 +7,6 @@ import com.resumeshortlist.resume_shortlist_backend.repository.usercv.AnalysisRe
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.Collections;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 @Service

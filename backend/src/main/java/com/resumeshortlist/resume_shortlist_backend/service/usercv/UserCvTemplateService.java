@@ -1,7 +1,6 @@
 package com.resumeshortlist.resume_shortlist_backend.service.usercv;
 
 import com.resumeshortlist.resume_shortlist_backend.dto.usercv.ResumeTemplateDTO;
-import com.resumeshortlist.resume_shortlist_backend.entity.usercv.SubscriptionForUser;
 import com.resumeshortlist.resume_shortlist_backend.entity.usercv.UserForCv;
 import org.springframework.stereotype.Service;
 
