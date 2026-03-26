@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot App",
+      "request": "launch",
+      "mainClass": "com.resumeshortlist.resume_shortlist_backend.ResumeShortlistBackendApplication",
+      "projectName": "resume-shortlist-backend",
+      "envFile": "${workspaceFolder}/backend/.env"
+    }
+  ]
+}
