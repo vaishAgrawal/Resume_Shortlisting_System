@@ -592,7 +592,7 @@ export default function ResumeAnalyzerDashboard() {
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                               <label className="block text-sm font-semibold text-slate-700">Paste Job Description</label>
                               <a 
-                                href="https://drive.google.com/drive/folders/YOUR_GOOGLE_DRIVE_LINK_HERE" 
+                                href="https://drive.google.com/drive/folders/1HQl9jZUDWNIcQrQlSd4ebF2uORHgMCR8" 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-[11px] font-bold text-violet-600 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors w-fit"

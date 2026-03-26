@@ -69,18 +69,17 @@ public class JobDescriptionParsingService {
         ));
     }
 
-    public JobPosting parseJobDescription(File file) {
+    public JobPosting parseJobDescription(java.io.InputStream inputStream, String fallbackTitle) {
         JobPosting extractedData = new JobPosting();
         try {
-            // 1. Extract Text
-            String text = tika.parseToString(file);
+            // 1. Extract Text directly from the stream
+            String text = tika.parseToString(inputStream);
 
-            // 2. Call Gemini (Kept Gemini logic here for JD Extraction as requested)
+            // 2. Call Gemini
             String jsonResponse = callGeminiApi(text);
 
             // 3. Map to Entity
-            JsonNode root = objectMapper.readTree(jsonResponse);
-
+            com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(jsonResponse);
             extractedData.setTitle(getText(root, "title"));
             extractedData.setDepartment(getText(root, "department"));
             extractedData.setDescription(getText(root, "description"));
@@ -89,8 +88,7 @@ public class JobDescriptionParsingService {
 
         } catch (Exception e) {
             System.err.println("JD Parsing Failed: " + e.getMessage());
-            // Fallback defaults if AI fails
-            extractedData.setTitle(file.getName());
+            extractedData.setTitle(fallbackTitle);
             extractedData.setDescription("Uploaded via file. Parsing failed.");
         }
         return extractedData;

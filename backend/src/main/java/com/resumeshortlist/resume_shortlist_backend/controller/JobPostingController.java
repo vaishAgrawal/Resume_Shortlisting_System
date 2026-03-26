@@ -4,6 +4,7 @@ import com.resumeshortlist.resume_shortlist_backend.entity.JobPosting;
 import com.resumeshortlist.resume_shortlist_backend.entity.User;
 import com.resumeshortlist.resume_shortlist_backend.repository.JobPostingRepository;
 import com.resumeshortlist.resume_shortlist_backend.repository.UserRepository;
+import com.resumeshortlist.resume_shortlist_backend.service.CloudinaryService;
 import com.resumeshortlist.resume_shortlist_backend.service.JobDescriptionParsingService;
 import com.resumeshortlist.resume_shortlist_backend.service.JobPostingService;
 
@@ -37,6 +38,9 @@ public class JobPostingController {
 
     @Autowired
     private JobDescriptionParsingService jobDescriptionParsingService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     private static final Logger logger = LoggerFactory.getLogger(JobPostingController.class);
 
@@ -145,69 +149,44 @@ public class JobPostingController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("userId") Long userId) {
 
-        logger.info("=== JD UPLOAD STARTED ===");
+        logger.info("=== JD UPLOAD TO CLOUDINARY STARTED ===");
 
         try {
-
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            String uploadDir = "C:/uploads/job_descriptions/";
+            // 1. Upload to Cloudinary
+            String cloudinaryUrl = cloudinaryService.uploadFile(file);
 
-            File uploadFolder = new File(uploadDir);
+            // 2. Parse text directly from the multipart stream (No local saving!)
+            JobPosting extractedData = jobDescriptionParsingService.parseJobDescription(file.getInputStream(), file.getOriginalFilename());
 
-            if (!uploadFolder.exists()) {
-                boolean created = uploadFolder.mkdirs();
-
-                if (!created) {
-                    throw new IOException("Failed to create upload directory");
-                }
-            }
-
-            String uniqueName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-
-            File dest = new File(uploadDir + uniqueName);
-
-            file.transferTo(dest);
-
-            JobPosting extractedData = jobDescriptionParsingService.parseJobDescription(dest);
-
+            // 3. Save to DB
             JobPosting jp = new JobPosting();
-
-            jp.setTitle(extractedData.getTitle() != null
-                    ? extractedData.getTitle()
-                    : file.getOriginalFilename());
-
+            jp.setTitle(extractedData.getTitle() != null ? extractedData.getTitle() : file.getOriginalFilename());
             jp.setDepartment(extractedData.getDepartment());
-            jp.setDescription(extractedData.getDescription() != null
-                    ? extractedData.getDescription()
-                    : "Uploaded via File");
-
+            jp.setDescription(extractedData.getDescription() != null ? extractedData.getDescription() : "Uploaded via File");
             jp.setMinExperienceYears(extractedData.getMinExperienceYears());
             jp.setEducationLevel(extractedData.getEducationLevel());
 
             jp.setFileName(file.getOriginalFilename());
-            jp.setFilePath(dest.getAbsolutePath());
+            jp.setFilePath(cloudinaryUrl); // Store Cloudinary URL
             jp.setFileType(file.getContentType());
-
             jp.setCreatedBy(user);
             jp.setCreatedAt(LocalDateTime.now());
 
             JobPosting savedJob = jobPostingRepository.save(jp);
 
-            Map<String, Object> response = new HashMap<>();
-
+            Map<String, Object> response = new java.util.HashMap<>();
             response.put("id", savedJob.getId());
             response.put("title", savedJob.getTitle());
             response.put("department", savedJob.getDepartment());
-            response.put("educationLevel", savedJob.getEducationLevel());
-            response.put("message", "Upload successful");
+            response.put("message", "Upload successful to Cloudinary");
 
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body("JD Upload Failed: " + e.getMessage());
+            return ResponseEntity.status(500).body("JD Upload Failed: " + e.getMessage());
         }
     }
 }

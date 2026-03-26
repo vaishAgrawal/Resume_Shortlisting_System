@@ -1,23 +1,16 @@
-// src/main/java/com/resumeshortlist/resume_shortlist_backend/service/FileUploadService.java
 package com.resumeshortlist.resume_shortlist_backend.service;
 
 import com.resumeshortlist.resume_shortlist_backend.entity.Resume;
 import com.resumeshortlist.resume_shortlist_backend.entity.User;
 import com.resumeshortlist.resume_shortlist_backend.repository.ResumeRepository;
 import com.resumeshortlist.resume_shortlist_backend.repository.UserRepository;
-import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
-import java.io.FileOutputStream;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class FileUploadService {
@@ -28,8 +21,9 @@ public class FileUploadService {
     @Autowired
     private UserRepository userRepository;
 
-    private final Tika tika = new Tika();
-    private final String uploadDir = "uploads/resumes/";
+    // 1️⃣ Inject the CloudinaryService we created
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     public FileUploadService(ResumeRepository resumeRepository, UserRepository userRepository) {
         this.resumeRepository = resumeRepository;
@@ -44,13 +38,17 @@ public class FileUploadService {
 
         for (MultipartFile file : files) {
 
-            // 1️⃣ Save file physically
-            File savedFile = saveFileToLocal(file);
+            // 2️⃣ Upload the file directly to Cloudinary
+            // This returns a secure URL (e.g., https://res.cloudinary.com/...)
+            String cloudinaryUrl = cloudinaryService.uploadFile(file);
 
-            // 2️⃣ Create Resume record
+            // 3️⃣ Create Resume record
             Resume resume = new Resume();
             resume.setFileName(file.getOriginalFilename());
-            resume.setFilePath(savedFile.getAbsolutePath());
+            
+            // 4️⃣ Save the Cloudinary URL in the database instead of the local C:/ path!
+            resume.setFilePath(cloudinaryUrl); 
+            
             resume.setFileType(file.getContentType());
             resume.setUploadedAt(LocalDateTime.now());
             resume.setUploadedBy(user);
@@ -63,17 +61,5 @@ public class FileUploadService {
 
     public List<Resume> getAllResumesByUser(Long userId) {
         return resumeRepository.findByUploadedById(userId);
-    }
-
-    /* Helpers */
-    private File saveFileToLocal(MultipartFile multipartFile) throws Exception {
-        File folder = new File(uploadDir);
-        if (!folder.exists()) folder.mkdirs();
-
-        File dest = new File(uploadDir + UUID.randomUUID() + "_" + multipartFile.getOriginalFilename());
-        try (FileOutputStream fos = new FileOutputStream(dest)) {
-            fos.write(multipartFile.getBytes());
-        }
-        return dest;
     }
 }
