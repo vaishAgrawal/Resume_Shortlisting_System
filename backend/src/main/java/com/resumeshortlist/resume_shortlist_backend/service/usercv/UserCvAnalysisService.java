@@ -111,11 +111,14 @@ public class UserCvAnalysisService {
 
         // 2. Default set if empty
         if (domains.isEmpty()) {
-            domains.add("Software Engineer");
+            domains.add("Content Creator");
             domains.add("Backend Developer");
             domains.add("Frontend Developer");
-            domains.add("Data Analyst");
-            domains.add("Product Manager");
+            domains.add("Digital Marketer");
+            domains.add("Graphic Designer");
+            domains.add("Graphic Designer");
+            domains.add("Graphic Designer");
+            domains.add("Full Stack Developer");
             domains.add("UI/UX Designer");
         }
 

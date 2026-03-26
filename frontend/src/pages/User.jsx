@@ -147,6 +147,13 @@ export default function ResumeAnalyzerDashboard() {
       setError("Please upload a resume and select a domain.");
       return;
     }
+
+    // NEW: Enforce JD Text requirement
+    if (!jdText.trim()) {
+      setError("Please paste a Job Description to enable accurate ATS matching.");
+      return;
+    }
+
     setLoading(true);
     setAnalyzed(false);
     setError(null);
@@ -323,6 +330,7 @@ export default function ResumeAnalyzerDashboard() {
     }
   };
 
+
   return (
     <main className="min-h-screen font-sans text-slate-900 bg-gradient-to-br from-[#f7f3ff] via-[#f1edff] to-[#eef2ff]">
       
@@ -472,7 +480,14 @@ export default function ResumeAnalyzerDashboard() {
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute -top-32 left-0 h-96 w-96 rounded-full bg-violet-200/45 blur-[120px]"></div>
         <div className="pointer-events-none absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-indigo-300/40 blur-[140px]"></div>
-        
+        {/* TOP NAVIGATION UTILITY BAR */}
+        <div className="max-w-7xl mx-auto px-6 pt-6 flex justify-end">
+           <button onClick={fetchHistory} className="flex items-center gap-2 px-5 py-2.5 bg-white/60 backdrop-blur-md border border-slate-200 rounded-full text-sm font-bold text-slate-700 shadow-sm hover:bg-white transition-all">
+             <History className="h-4 w-4 text-violet-500" />
+             View History
+             {userPlan === "FREE" && <Lock className="h-3.5 w-3.5 text-slate-400 ml-1" />}
+           </button>
+        </div>
         <div className="max-w-7xl mx-auto px-6 pt-28 pb-12 lg:pt-32 lg:pb-20">
         
           {!analyzed && !loading && (
@@ -572,12 +587,23 @@ export default function ResumeAnalyzerDashboard() {
                             </select>
                           </div>
 
+                          {/* === NEW FRONTEND JD LINK UI WITH PROPER ALIGNMENT === */}
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">Paste Job Description (Optional)</label>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                              <label className="block text-sm font-semibold text-slate-700">Paste Job Description</label>
+                              <a 
+                                href="https://drive.google.com/drive/folders/YOUR_GOOGLE_DRIVE_LINK_HERE" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-[11px] font-bold text-violet-600 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors w-fit"
+                              >
+                                <Download size={12} /> Don't have a JD? Download Sample
+                              </a>
+                            </div>
                             <textarea
                               value={jdText}
                               onChange={(e) => setJdText(e.target.value)}
-                              placeholder="Paste the job description here for higher accuracy..."
+                              placeholder="Paste the target job description here for accurate ATS matching..."
                               className="w-full h-32 rounded-xl border border-violet-200 bg-white/90 px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none placeholder:text-slate-400"
                             />
                           </div>
