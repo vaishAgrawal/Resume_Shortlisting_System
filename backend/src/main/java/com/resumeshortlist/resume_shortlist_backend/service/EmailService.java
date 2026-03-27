@@ -17,9 +17,16 @@ public class EmailService {
     @Value("${support.email.receiver}")
     private String receiverEmail;
 
+    // 🔥 NEW: Grab the email address you use to log into Brevo
+    @Value("${app.mail.from}")
+    private String fromEmail;
+
     public void sendSupportNotification(SupportTicket ticket) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            
+            // 🔥 NEW: You MUST set the "From" address for Brevo
+            message.setFrom(fromEmail); 
             
             // Set who gets the email
             message.setTo(receiverEmail);
